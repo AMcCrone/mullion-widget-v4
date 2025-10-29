@@ -102,16 +102,18 @@ def material_ui(container=None, key_prefix: str = "mat",
         
     if selected_grade == "Custom":
         parent.markdown("Enter custom properties:")
-        E = parent.number_input("E (Pa)", value=float(_get_default(f"{key_prefix}_E", 69e9 if mtype == MaterialType.ALUMINIUM else 210e9)), format="%.6e", key=f"{key_prefix}_E_widget")
-        density = parent.number_input("Density (kg/m³)", value=float(_get_default(f"{key_prefix}_density", 2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0)), format="%.3f", key=f"{key_prefix}_density_widget")
-        fy = parent.number_input("fy (Pa)", value=float(_get_default(f"{key_prefix}_fy", 155e6 if mtype == MaterialType.ALUMINIUM else 275e6)), format="%.3e", key=f"{key_prefix}_fy_widget")
-        fu = parent.number_input("fu (Pa)", value=float(_get_default(f"{key_prefix}_fu", 200e6 if mtype == MaterialType.ALUMINIUM else 430e6)), format="%.3e", key=f"{key_prefix}_fu_widget")
+        col1, col2, col3 = parent.columns(3)
+        with col1:
+            E = parent.number_input("E (Pa)", value=float(_get_default(f"{key_prefix}_E", 69e9 if mtype == MaterialType.ALUMINIUM else 210e9)), format="%.6e", key=f"{key_prefix}_E_widget")
+        with col2:
+            density = parent.number_input("Density (kg/m³)", value=float(_get_default(f"{key_prefix}_density", 2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0)), format="%.3f", key=f"{key_prefix}_density_widget")
+        with col3:
+            fy = parent.number_input("fy (Pa)", value=float(_get_default(f"{key_prefix}_fy", 155e6 if mtype == MaterialType.ALUMINIUM else 275e6)), format="%.3e", key=f"{key_prefix}_fy_widget")
 
         # save to session
         st.session_state.inputs[f"{key_prefix}_E"] = E
         st.session_state.inputs[f"{key_prefix}_density"] = density
         st.session_state.inputs[f"{key_prefix}_fy"] = fy
-        st.session_state.inputs[f"{key_prefix}_fu"] = fu
 
         mat = Material(material_type=mtype, grade="Custom", E=E, density=density, fy=fy, fu=fu)
     else:
@@ -124,8 +126,7 @@ def material_ui(container=None, key_prefix: str = "mat",
             mat = Material(material_type=mtype, grade="CustomFallback",
                            E=69e9 if mtype == MaterialType.ALUMINIUM else 210e9,
                            density=2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0,
-                           fy=155e6 if mtype == MaterialType.ALUMINIUM else 275e6,
-                           fu=200e6 if mtype == MaterialType.ALUMINIUM else 430e6)
+                           fy=155e6 if mtype == MaterialType.ALUMINIUM else 275e6)
 
     # summary readout
     parent.write("**Material summary**")
