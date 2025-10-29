@@ -16,7 +16,7 @@ class Load:
                if distribution == 'point' -> N
     """
     kind: LoadKind
-    magnitude: float
+    magnitude: float  # N/mm for uniform, N for point
     distribution: str = "uniform"  # "uniform" or "point"
     height_mm: Optional[float] = None
 
@@ -25,20 +25,248 @@ class Load:
             raise ValueError("magnitude must be non-negative.")
         if self.distribution not in ("uniform", "point"):
             raise ValueError("distribution must be 'uniform' or 'point'.")
-        if self.kind == LoadKind.BARRIER and (self.height_mm is None or self.height_mm <= 0):
+        if self.kind == LoadKind.BARRIER and self.distribution == "uniform" and (self.height_mm is None or self.height_mm <= 0):
             raise ValueError("Barrier loads must provide positive height_mm (mm).")
 
     def magnitude_n_per_m(self) -> Optional[float]:
+        """Convert to N/m for display purposes"""
         if self.distribution != "uniform":
             return None
         return self.magnitude * 1000.0
 
     def magnitude_n(self) -> Optional[float]:
+        """Return point load magnitude in N"""
         if self.distribution == "point":
             return self.magnitude
         return None
 
 
+@dataclass
+class LoadingInputs:
+    """Container for loading input values from UI"""
+    # Wind load
+    include_wind: bool = True
+    wind_pressure_kpa: float = 1.0
+    bay_width_mm: float = 3000.0
+    
+    # Barrier load
+    include_barrier: bool = False
+    barrier_load_kn_per_m: float = 0.74
+    barrier_height_mm: float = 1100.0
+    
+    def wind_load_n_per_mm(self) -> float:
+        """
+        Convert wind pressure to uniform load on mullion
+        
+        Wind pressure (kPa) × Bay width (mm) × 10^-3 = N/mm
+        """
+        if not self.include_wind:
+            return 0.0
+        return self.wind_pressure_kpa * self.bay_width_mm * 1e-3
+    
+    def barrier_load_n_per_mm(self) -> float:
+        """
+        Convert barrier load to N/mm
+        
+        Barrier load (kN/m) = N/mm (no conversion needed)
+        """
+        if not self.include_barrier:
+            return 0.0
+        return self.barrier_load_kn_per_m
+    
+    def to_loads(self) -> List[Load]:
+        """Convert input values to Load objects"""
+        loads = []
+        
+        if self.include_wind:
+            loads.append(Load(
+                kind=LoadKind.WIND,
+                magnitude=self.wind_load_n_per_mm(),
+                distribution="uniform"
+            ))
+        
+        if self.include_barrier:
+            loads.append(Load(
+                kind=LoadKind.BARRIER,
+                magnitude=self.barrier_load_n_per_mm(),
+                distribution="uniform",
+                height_mm=self.barrier_height_mm
+            ))
+        
+        return loads
+
+
+def loading_ui(container=None, key_prefix: str = "load",
+               bay_width_mm: float = 3000.0) -> LoadingInputs:
+    """
+    Render loading inputs in Streamlit UI.
+    
+    Parameters
+    ----------
+    container : streamlit container, optional
+        Container to render UI in (if None, uses st directly)
+    key_prefix : str
+        Prefix for session state keys
+    bay_width_mm : float
+        Bay width from geometry section (mm)
+        
+    Returns
+    -------
+    LoadingInputs
+        Container with all loading input values
+    """
+    try:
+        import streamlit as st
+    except Exception as e:
+        raise RuntimeError("loading_ui requires streamlit but it isn't available.") from e
+
+    parent = container if container is not None else st
+
+    if "inputs" not in st.session_state:
+        st.session_state.inputs = {}
+
+    def _get_default(name, fallback):
+        return st.session_state.inputs.get(name, fallback)
+
+    # Layout: two columns for better organization
+    col1, col2 = parent.columns(2)
+
+    # ========== WIND LOAD ==========
+    with col1:
+        parent.markdown("#### Wind Load")
+        
+        include_wind = parent.checkbox(
+            "Include wind load",
+            value=bool(_get_default(f"{key_prefix}_wind_en", True)),
+            key=f"{key_prefix}_wind_en_widget",
+            help="Check to include wind pressure loading on the mullion"
+        )
+        st.session_state.inputs[f"{key_prefix}_wind_en"] = include_wind
+        
+        wind_pressure_kpa = parent.number_input(
+            "Wind pressure (kPa)",
+            min_value=0.0,
+            max_value=10.0,
+            value=float(_get_default(f"{key_prefix}_wind_kpa", 1.0)),
+            step=0.1,
+            format="%.2f",
+            key=f"{key_prefix}_wind_kpa_widget",
+            help="Design wind pressure acting on the facade",
+            disabled=not include_wind
+        )
+        st.session_state.inputs[f"{key_prefix}_wind_kpa"] = wind_pressure_kpa
+        
+        if include_wind:
+            # Calculate and display derived values
+            wind_n_per_mm = wind_pressure_kpa * bay_width_mm * 1e-3
+            wind_n_per_m = wind_n_per_mm * 1000.0
+            
+            parent.info(f"""
+            **Calculated wind load:**
+            - {wind_n_per_mm:.4f} N/mm
+            - {wind_n_per_m:.2f} N/m
+            
+            *Calculation: {wind_pressure_kpa} kPa × {bay_width_mm} mm × 10⁻³*
+            """)
+
+    # ========== BARRIER LOAD ==========
+    with col2:
+        parent.markdown("#### Barrier Load")
+        
+        include_barrier = parent.checkbox(
+            "Include barrier load",
+            value=bool(_get_default(f"{key_prefix}_barrier_en", False)),
+            key=f"{key_prefix}_barrier_en_widget",
+            help="Check to include horizontal line load from barrier"
+        )
+        st.session_state.inputs[f"{key_prefix}_barrier_en"] = include_barrier
+        
+        barrier_load_kn_per_m = parent.number_input(
+            "Barrier load (kN/m)",
+            min_value=0.0,
+            max_value=5.0,
+            value=float(_get_default(f"{key_prefix}_barrier_knm", 0.74)),
+            step=0.01,
+            format="%.3f",
+            key=f"{key_prefix}_barrier_knm_widget",
+            help="Horizontal line load from barrier",
+            disabled=not include_barrier
+        )
+        st.session_state.inputs[f"{key_prefix}_barrier_knm"] = barrier_load_kn_per_m
+        
+        barrier_height_mm = parent.number_input(
+            "Barrier height (mm)",
+            min_value=0.0,
+            max_value=2000.0,
+            value=float(_get_default(f"{key_prefix}_barrier_height", 1100.0)),
+            step=50.0,
+            format="%.1f",
+            key=f"{key_prefix}_barrier_height_widget",
+            help="Height above mullion base where barrier load acts",
+            disabled=not include_barrier
+        )
+        st.session_state.inputs[f"{key_prefix}_barrier_height"] = barrier_height_mm
+        
+        if include_barrier:
+            # Display info (kN/m = N/mm, no conversion needed)
+            barrier_n_per_mm = barrier_load_kn_per_m
+            
+            parent.info(f"""
+            **Calculated barrier load:**
+            - {barrier_n_per_mm:.4f} N/mm
+            - {barrier_height_mm:.0f} mm above base
+            """)
+
+    # Create LoadingInputs object
+    loading_inputs = LoadingInputs(
+        include_wind=include_wind,
+        wind_pressure_kpa=wind_pressure_kpa,
+        bay_width_mm=bay_width_mm,
+        include_barrier=include_barrier,
+        barrier_load_kn_per_m=barrier_load_kn_per_m,
+        barrier_height_mm=barrier_height_mm
+    )
+    
+    # Display summary in columns
+    sum_col1, sum_col2, sum_col3 = parent.columns(3)
+    
+    with sum_col1:
+        parent.metric(
+            "Wind Load",
+            f"{loading_inputs.wind_load_n_per_mm():.4f} N/mm" if include_wind else "Not included",
+            help="Uniform distributed load from wind"
+        )
+    
+    with sum_col2:
+        parent.metric(
+            "Barrier Load",
+            f"{loading_inputs.barrier_load_n_per_mm():.4f} N/mm" if include_barrier else "Not included",
+            help="Line load from barrier/balustrade"
+        )
+    
+    with sum_col3:
+        if include_barrier:
+            parent.metric(
+                "Barrier Height",
+                f"{barrier_height_mm:.0f} mm",
+                help="Height of barrier load application"
+            )
+        else:
+            parent.metric("Barrier Height", "N/A")
+    
+    # Total load (if both included)
+    if include_wind or include_barrier:
+        total_udl = loading_inputs.wind_load_n_per_mm() + loading_inputs.barrier_load_n_per_mm()
+        parent.info(f"""
+        **Combined uniform load:** {total_udl:.4f} N/mm ({total_udl * 1000:.2f} N/m)
+        
+        *This represents the total distributed load before applying load case factors*
+        """)
+
+    return loading_inputs
+
+
+# For backwards compatibility with existing code
 @dataclass
 class LoadCase:
     name: str
@@ -58,80 +286,3 @@ class LoadCase:
             if ld.distribution == "point":
                 total += ld.magnitude
         return total
-
-
-# ---------- UI helper (always-visible inputs) ----------
-def loading_ui(container=None, key_prefix: str = "load",
-               default_wind_n_per_mm: float = 0.05,
-               default_barrier_n_per_mm: float = 0.1,
-               default_barrier_height_mm: float = 1100.0) -> LoadCase:
-    """
-    Render load inputs as visible fields (no expander). Returns a LoadCase dataclass.
-
-    Uses st.session_state.inputs[...] for defaults and persistence.
-    """
-    try:
-        import streamlit as st
-    except Exception as e:
-        raise RuntimeError("loading_ui requires streamlit but it isn't available.") from e
-
-    parent = container if container is not None else st
-
-    if "inputs" not in st.session_state:
-        st.session_state.inputs = {}
-
-    def _get_default(name, fallback):
-        return st.session_state.inputs.get(name, fallback)
-
-    # Layout: two columns
-    col1, col2 = parent.columns(2)
-
-    with col1:
-        parent.write("**Loads (uniform loads = N/mm)**")
-        wind_enabled = parent.checkbox("Include wind load", value=bool(_get_default(f"{key_prefix}_wind_en", True)), key=f"{key_prefix}_wind_en_widget")
-        wind_val = parent.number_input("Wind load (N/mm)", min_value=0.0, value=float(_get_default(f"{key_prefix}_wind_val", default_wind_n_per_mm)), format="%.6f", key=f"{key_prefix}_wind_val_widget")
-        st.session_state.inputs[f"{key_prefix}_wind_en"] = wind_enabled
-        st.session_state.inputs[f"{key_prefix}_wind_val"] = wind_val
-
-        barrier_enabled = parent.checkbox("Include barrier load", value=bool(_get_default(f"{key_prefix}_bar_en", False)), key=f"{key_prefix}_bar_en_widget")
-        barrier_val = parent.number_input("Barrier load (N/mm)", min_value=0.0, value=float(_get_default(f"{key_prefix}_bar_val", default_barrier_n_per_mm)), format="%.6f", key=f"{key_prefix}_bar_val_widget")
-        barrier_height = parent.number_input("Barrier load height (mm)", min_value=1.0, value=float(_get_default(f"{key_prefix}_bar_height", default_barrier_height_mm)), format="%.1f", key=f"{key_prefix}_bar_height_widget")
-        st.session_state.inputs[f"{key_prefix}_bar_en"] = barrier_enabled
-        st.session_state.inputs[f"{key_prefix}_bar_val"] = barrier_val
-        st.session_state.inputs[f"{key_prefix}_bar_height"] = barrier_height
-
-        dead_enabled = parent.checkbox("Include dead load", value=bool(_get_default(f"{key_prefix}_dead_en", False)), key=f"{key_prefix}_dead_en_widget")
-        dead_val = parent.number_input("Dead load (N/mm)", min_value=0.0, value=float(_get_default(f"{key_prefix}_dead_val", 0.0)), format="%.6f", key=f"{key_prefix}_dead_val_widget")
-        st.session_state.inputs[f"{key_prefix}_dead_en"] = dead_enabled
-        st.session_state.inputs[f"{key_prefix}_dead_val"] = dead_val
-
-    with col2:
-        parent.write("**Optional concentrated load**")
-        add_point = parent.checkbox("Add concentrated point load (N)", value=bool(_get_default(f"{key_prefix}_pt_en", False)), key=f"{key_prefix}_pt_en_widget")
-        pt_val = parent.number_input("Point load magnitude (N)", min_value=0.0, value=float(_get_default(f"{key_prefix}_pt_val", 0.0)), format="%.1f", key=f"{key_prefix}_pt_val_widget")
-        st.session_state.inputs[f"{key_prefix}_pt_en"] = add_point
-        st.session_state.inputs[f"{key_prefix}_pt_val"] = pt_val
-
-        case_name = parent.text_input("Load case name", value=_get_default(f"{key_prefix}_case_name", "ULS_wind_barrier"), key=f"{key_prefix}_case_name_widget")
-        case_type = parent.selectbox("Load case type", options=["ULS", "SLS"], index=0 if _get_default(f"{key_prefix}_case_type", "ULS") == "ULS" else 1, key=f"{key_prefix}_case_type_widget")
-        st.session_state.inputs[f"{key_prefix}_case_name"] = case_name
-        st.session_state.inputs[f"{key_prefix}_case_type"] = case_type
-
-        # summary
-        # compute totals temporarily
-        loads = []
-        if wind_enabled:
-            loads.append(Load(kind=LoadKind.WIND, magnitude=wind_val, distribution="uniform"))
-        if barrier_enabled:
-            loads.append(Load(kind=LoadKind.BARRIER, magnitude=barrier_val, distribution="uniform", height_mm=barrier_height))
-        if dead_enabled:
-            loads.append(Load(kind=LoadKind.DEAD, magnitude=dead_val, distribution="uniform"))
-        if add_point and pt_val > 0:
-            loads.append(Load(kind=LoadKind.DEAD, magnitude=pt_val, distribution="point"))
-
-        lc = LoadCase(name=case_name, loads=loads, case_type=case_type)
-        parent.write("**Load summary**")
-        parent.write(f"- Total uniform load (N/m): {lc.total_uniform_n_per_m():.1f}")
-        parent.write(f"- Total point load (N): {lc.total_point_n():.1f}")
-
-    return lc
