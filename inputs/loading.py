@@ -64,7 +64,7 @@ class LoadingInputs:
             return 0.0
         return self.wind_pressure_kpa * self.bay_width_mm * 1e-3
     
-    def barrier_load_n(self) -> float:
+    def barrier_load_n_per_mm(self) -> float:
         """
         Convert barrier point load to uniform load on mullion
         
@@ -101,7 +101,7 @@ class LoadingInputs:
         if self.include_barrier:
             loads.append(Load(
                 kind=LoadKind.BARRIER,
-                magnitude=self.barrier_load_n(),
+                magnitude=self.barrier_load_n_per_mm(),
                 distribution="uniform",
                 height_mm=self.barrier_height_mm
             ))
@@ -263,7 +263,7 @@ def loading_ui(container=None, key_prefix: str = "load",
     with sum_col2:
         parent.metric(
             "Barrier Load",
-            f"{loading_inputs.barrier_load_n():.4f} N/mm" if include_barrier else "Not included",
+            f"{loading_inputs.barrier_load_n_per_mm():.4f} N/mm" if include_barrier else "Not included",
             help="Line load from barrier/balustrade"
         )
     
@@ -279,7 +279,7 @@ def loading_ui(container=None, key_prefix: str = "load",
     
     # Total load (if both included)
     if include_wind or include_barrier:
-        total_udl = loading_inputs.wind_load_n_per_mm() + loading_inputs.barrier_load_n()
+        total_udl = loading_inputs.wind_load_n_per_mm() + loading_inputs.barrier_load_n_per_mm()
         parent.info(f"""
         **Combined uniform load:** {total_udl:.4f} N/mm ({total_udl * 1000:.2f} N/m)
         
