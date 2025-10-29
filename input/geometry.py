@@ -1,14 +1,13 @@
 # input/geometry.py
 from dataclasses import dataclass
 
-
 @dataclass
 class Geometry:
     """Simple geometry for a mullion bay.
 
     Units:
-      - span_mm: span between supports in mm (length along mullion that carries bending)
-      - bay_width_mm: width of the glazing bay / tributary width in mm
+      - span_mm: span between supports in mm
+      - bay_width_mm: bay width in mm
     """
     span_mm: float
     bay_width_mm: float
@@ -21,17 +20,14 @@ class Geometry:
 
     @property
     def span_m(self) -> float:
-        """Span in metres."""
         return self.span_mm / 1000.0
 
     @property
     def bay_width_m(self) -> float:
-        """Bay width in metres."""
         return self.bay_width_mm / 1000.0
 
     @property
     def tributary_area_m2(self) -> float:
-        """Simple tributary area in m^2 (span * bay width)."""
         return self.span_m * self.bay_width_m
 
     def as_dict(self):
@@ -44,19 +40,15 @@ class Geometry:
         }
 
 
-
+# ---------- UI helper (always visible inputs) ----------
 def geometry_ui(container=None, key_prefix: str = "geom",
-                default_span_mm: float = 3000.0, default_bay_width_mm: float = 1000.0) -> "Geometry":
+                default_span_mm: float = 3000.0, default_bay_width_mm: float = 1000.0) -> Geometry:
     """
-    Render geometry inputs on the main page (not sidebar) and return a Geometry instance.
+    Render geometry inputs as always-visible fields (no expander) and return a Geometry instance.
 
-    Parameters
-    - container: Streamlit container to render into (defaults to streamlit module)
-    - key_prefix: unique prefix for widget keys to avoid collisions
-    - default_span_mm/default_bay_width_mm: initial values
-
-    Usage:
-        geom = geometry_ui(st, key_prefix="main_geom")
+    Parameters:
+        - container: Streamlit container (default: `st`)
+        - key_prefix: unique widget key prefix
     """
     try:
         import streamlit as st
@@ -65,25 +57,43 @@ def geometry_ui(container=None, key_prefix: str = "geom",
 
     parent = container if container is not None else st
 
-    with parent.expander("Geometry", expanded=True):
+    # Ensure session_state.inputs dictionary exists
+    if "inputs" not in st.session_state:
+        st.session_state.inputs = {}
+
+    # defaults read from session_state or fallback defaults
+    def _get_default(name, fallback):
+        return st.session_state.inputs.get(name, fallback)
+
+    # Layout: two columns (similar to your example)
+    col1, col2 = parent.columns(2)
+
+    with col1:
         span_mm = parent.number_input(
             "Span (mm)",
             min_value=1.0,
-            value=float(default_span_mm),
+            value=float(_get_default(f"{key_prefix}_span_mm", default_span_mm)),
             format="%.1f",
-            key=f"{key_prefix}_span_mm"
+            key=f"{key_prefix}_span_mm_widget"
         )
+        # save into session_state so other modules/forms can read
+        st.session_state.inputs[f"{key_prefix}_span_mm"] = span_mm
+
         bay_width_mm = parent.number_input(
             "Bay width (mm)",
             min_value=1.0,
-            value=float(default_bay_width_mm),
+            value=float(_get_default(f"{key_prefix}_bay_width_mm", default_bay_width_mm)),
             format="%.1f",
-            key=f"{key_prefix}_bay_width_mm"
+            key=f"{key_prefix}_bay_width_mm_widget"
         )
+        st.session_state.inputs[f"{key_prefix}_bay_width_mm"] = bay_width_mm
 
-        # quick readout
+    with col2:
+        # Display read-only computed values
         geom = Geometry(span_mm=span_mm, bay_width_mm=bay_width_mm)
-        parent.write(f"Tributary area: **{geom.tributary_area_m2:.4f} m²**")
+        parent.write("**Geometry summary**")
+        parent.write(f"- Span (m): {geom.span_m:.3f}")
+        parent.write(f"- Bay width (m): {geom.bay_width_m:.3f}")
+        parent.write(f"- Tributary area (m²): {geom.tributary_area_m2:.4f}")
 
     return geom
-
