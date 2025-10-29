@@ -72,52 +72,94 @@ class LoadCase:
 
 
 # Streamlit UI helper
-def loading_ui(default_wind_n_per_mm: float = 0.05,
-               default_barrier_n_per_mm: float = 0.1,
-               default_barrier_height_mm: float = 1100.0) -> LoadCase:
-    """
-    Streamlit UI to capture a simple load case consisting of wind + barrier loads.
-    - default_wind_n_per_mm: N/mm (distributed along mullion length)
-    - default_barrier_n_per_mm: N/mm (distributed along mullion length)
-    - default_barrier_height_mm: mm
 
-    Returns a LoadCase dataclass.
+def loading_ui(container=None, key_prefix: str = "load",
+               default_wind_n_per_mm: float = 0.05,
+               default_barrier_n_per_mm: float = 0.1,
+               default_barrier_height_mm: float = 1100.0) -> "LoadCase":
+    """
+    Render load inputs on the main page and return a LoadCase.
+
+    Notes:
+    - Uniform loads are entered in N/mm (force per mm of mullion length).
+    - Point loads may be added (N).
+    - container: optional Streamlit container
+    - key_prefix: unique widget key prefix
     """
     try:
         import streamlit as st
     except Exception as e:
         raise RuntimeError("loading_ui requires streamlit but it isn't available.") from e
 
-    st.sidebar.header("Loads (units: mm / N)")
-    st.sidebar.markdown("**Distributed load units:** N/mm (force per mm of mullion length). Use point loads for concentrated forces.")
+    parent = container if container is not None else st
 
-    wind_enabled = st.sidebar.checkbox("Include wind load", value=True)
-    barrier_enabled = st.sidebar.checkbox("Include barrier load", value=False)
+    with parent.expander("Loads", expanded=False):
+        parent.markdown("**Enter loads** (units: mm / N). Uniform loads = N/mm (force per mm of mullion length).")
 
-    loads = []
+        # toggles for basic loads
+        wind_enabled = parent.checkbox("Include wind load", value=True, key=f"{key_prefix}_wind_en")
+        barrier_enabled = parent.checkbox("Include barrier load", value=False, key=f"{key_prefix}_bar_en")
+        dead_enabled = parent.checkbox("Include dead load", value=False, key=f"{key_prefix}_dead_en")
 
-    if wind_enabled:
-        # default value interpreted as N/mm
-        wind_val = st.sidebar.number_input("Wind load (N/mm, uniform)", min_value=0.0, value=float(default_wind_n_per_mm))
-        loads.append(Load(kind=LoadKind.WIND, magnitude=wind_val, distribution="uniform"))
+        loads = []
 
-    if barrier_enabled:
-        barrier_val = st.sidebar.number_input("Barrier load (N/mm, uniform)", min_value=0.0, value=float(default_barrier_n_per_mm))
-        barrier_height = st.sidebar.number_input("Barrier load height (mm)", min_value=1.0, value=float(default_barrier_height_mm))
-        loads.append(Load(kind=LoadKind.BARRIER, magnitude=barrier_val, distribution="uniform", height_mm=barrier_height))
+        if wind_enabled:
+            wind_val = parent.number_input(
+                "Wind load (N/mm, uniform)",
+                min_value=0.0,
+                value=float(default_wind_n_per_mm),
+                format="%.6f",
+                key=f"{key_prefix}_wind_val"
+            )
+            loads.append(Load(kind=LoadKind.WIND, magnitude=wind_val, distribution="uniform"))
 
-    # Always include a dead load input (optional)
-    dead_enabled = st.sidebar.checkbox("Include dead load (N/mm)", value=False)
-    if dead_enabled:
-        dead_val = st.sidebar.number_input("Dead load (N/mm, uniform)", min_value=0.0, value=0.0)
-        loads.append(Load(kind=LoadKind.DEAD, magnitude=dead_val, distribution="uniform"))
+        if barrier_enabled:
+            barrier_val = parent.number_input(
+                "Barrier load (N/mm, uniform)",
+                min_value=0.0,
+                value=float(default_barrier_n_per_mm),
+                format="%.6f",
+                key=f"{key_prefix}_bar_val"
+            )
+            barrier_height = parent.number_input(
+                "Barrier load height (mm)",
+                min_value=1.0,
+                value=float(default_barrier_height_mm),
+                format="%.1f",
+                key=f"{key_prefix}_bar_height"
+            )
+            loads.append(Load(kind=LoadKind.BARRIER, magnitude=barrier_val, distribution="uniform", height_mm=barrier_height))
 
-    case_name = st.sidebar.text_input("Load case name", value="ULS_wind_barrier")
-    case_type = st.sidebar.selectbox("Load case type", ["ULS", "SLS"], index=0)
+        if dead_enabled:
+            dead_val = parent.number_input(
+                "Dead load (N/mm, uniform)",
+                min_value=0.0,
+                value=0.0,
+                format="%.6f",
+                key=f"{key_prefix}_dead_val"
+            )
+            loads.append(Load(kind=LoadKind.DEAD, magnitude=dead_val, distribution="uniform"))
 
-    lc = LoadCase(name=case_name, loads=loads, case_type=case_type)
-    # quick summary
-    st.sidebar.markdown(f"Total uniform load (N/m): {lc.total_uniform_n_per_m():.1f}")
-    st.sidebar.markdown(f"Total point load (N): {lc.total_point_n():.1f}")
+        # Optionally allow one point load (extendable later to multiple)
+        add_point = parent.checkbox("Add a concentrated point load (N)", value=False, key=f"{key_prefix}_pt_en")
+        if add_point:
+            pt_val = parent.number_input(
+                "Point load magnitude (N)",
+                min_value=0.0,
+                value=0.0,
+                format="%.1f",
+                key=f"{key_prefix}_pt_val"
+            )
+            loads.append(Load(kind=LoadKind.DEAD, magnitude=pt_val, distribution="point"))
+
+        case_name = parent.text_input("Load case name", value="ULS_wind_barrier", key=f"{key_prefix}_case_name")
+        case_type = parent.selectbox("Load case type", ["ULS", "SLS"], index=0, key=f"{key_prefix}_case_type")
+
+        lc = LoadCase(name=case_name, loads=loads, case_type=case_type)
+
+        parent.markdown("**Summary**")
+        parent.write(f"Total uniform load (N/m): {lc.total_uniform_n_per_m():.1f}")
+        parent.write(f"Total point load (N): {lc.total_point_n():.1f}")
+
     return lc
 
