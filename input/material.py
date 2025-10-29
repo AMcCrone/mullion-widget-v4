@@ -10,12 +10,12 @@ class MaterialType(str, Enum):
 
 _DEFAULT_MATERIAL_LIBRARY: Dict[MaterialType, Dict[str, Dict]] = {
     MaterialType.STEEL: {
-        "S275": {"E": 210e9, "density": 7850.0, "fy": 275e6, "fu": 430e6},
-        "S355": {"E": 210e9, "density": 7850.0, "fy": 355e6, "fu": 510e6},
+        "S275": {"E": 210e9, "density": 7850.0, "fy": 275e6},
+        "S355": {"E": 210e9, "density": 7850.0, "fy": 355e6},
     },
     MaterialType.ALUMINIUM: {
-        "6063-T6": {"E": 69e9, "density": 2700.0, "fy": 155e6, "fu": 200e6},
-        "6082-T6": {"E": 69e9, "density": 2700.0, "fy": 260e6, "fu": 310e6},
+        "6063-T6": {"E": 69e9, "density": 2700.0, "fy": 155e6},
+        "6082-T6": {"E": 69e9, "density": 2700.0, "fy": 260e6},
     },
 }
 
@@ -27,7 +27,6 @@ class Material:
     E: float
     density: float
     fy: float
-    fu: float
 
     def __post_init__(self):
         if self.E <= 0:
@@ -36,8 +35,6 @@ class Material:
             raise ValueError("density must be positive (kg/m3).")
         if self.fy <= 0:
             raise ValueError("fy must be positive (Pa).")
-        if self.fu <= 0:
-            raise ValueError("fu must be positive (Pa).")
 
     @classmethod
     def from_library(cls, material_type: MaterialType, grade: str) -> "Material":
@@ -115,7 +112,7 @@ def material_ui(container=None, key_prefix: str = "mat",
         st.session_state.inputs[f"{key_prefix}_density"] = density
         st.session_state.inputs[f"{key_prefix}_fy"] = fy
 
-        mat = Material(material_type=mtype, grade="Custom", E=E, density=density, fy=fy, fu=fu)
+        mat = Material(material_type=mtype, grade="Custom", E=E, density=density, fy=fy)
     else:
         # try library
         try:
