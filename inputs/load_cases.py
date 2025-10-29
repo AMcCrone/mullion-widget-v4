@@ -207,7 +207,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     edited_uls = parent.data_editor(
         st.session_state.uls_cases_df,
         num_rows="dynamic",
-        use_container_width=True,
+        width="stretch",
         key=f"{key_prefix}_uls_editor",
         column_config={
             "Load Case": st.column_config.TextColumn(
@@ -250,7 +250,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     edited_sls = parent.data_editor(
         st.session_state.sls_cases_df,
         num_rows="dynamic",
-        use_container_width=True,
+        width="stretch",
         key=f"{key_prefix}_sls_editor",
         column_config={
             "Load Case": st.column_config.TextColumn(
