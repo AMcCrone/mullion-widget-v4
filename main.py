@@ -5,7 +5,7 @@ from inputs.loading import loading_ui, loading_diagram_ui
 from inputs.load_cases import load_cases_ui
 
 st.set_page_config(page_title="Mullion Sizing")
-st.title("Mullion Sizing")
+st.title("Mullion Sizing App")
 
 # Layout example: put geometry and material side-by-side, loads on a second row
 st.header("Geometry")
