@@ -19,6 +19,11 @@ st.markdown("---")
 
 st.header("Loading")
 loads = loading_ui(container=st, key_prefix="main_load")
+# Get geometry from session state
+span_mm = st.session_state.inputs.get("geom_span_mm", 4000.0)
+bay_width_mm = st.session_state.inputs.get("geom_bay_width_mm", 3000.0)
+# Get loading inputs
+loading_inputs = loading_ui(bay_width_mm=bay_width_mm)
 loading_diagram_ui(span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
 st.markdown("---")
 
