@@ -230,15 +230,6 @@ def loading_ui(container=None, key_prefix: str = "load",
             )
         else:
             parent.metric("Barrier Height", "N/A")
-    
-    # Total load (if both included)
-    if include_wind or include_barrier:
-        total_udl = loading_inputs.wind_load_n_per_mm() + loading_inputs.barrier_load_n_per_mm()
-        parent.info(f"""
-        **Combined uniform load:** {total_udl:.4f} N/mm ({total_udl * 1000:.2f} N/m)
-        
-        *This represents the total distributed load before applying load case factors*
-        """)
 
     return loading_inputs
 
