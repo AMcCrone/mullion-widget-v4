@@ -44,20 +44,46 @@ class Geometry:
         }
 
 
-# Streamlit UI helper
-def geometry_ui(default_span_mm: float = 3000.0, default_bay_width_mm: float = 1000.0) -> Geometry:
+
+def geometry_ui(container=None, key_prefix: str = "geom",
+                default_span_mm: float = 3000.0, default_bay_width_mm: float = 1000.0) -> "Geometry":
     """
-    Streamlit UI to capture geometry. Returns a Geometry dataclass.
+    Render geometry inputs on the main page (not sidebar) and return a Geometry instance.
+
+    Parameters
+    - container: Streamlit container to render into (defaults to streamlit module)
+    - key_prefix: unique prefix for widget keys to avoid collisions
+    - default_span_mm/default_bay_width_mm: initial values
+
+    Usage:
+        geom = geometry_ui(st, key_prefix="main_geom")
     """
     try:
         import streamlit as st
     except Exception as e:
         raise RuntimeError("geometry_ui requires streamlit but it isn't available.") from e
 
-    st.sidebar.header("Geometry")
-    span_mm = st.sidebar.number_input("Span (mm)", min_value=1.0, value=float(default_span_mm), format="%.1f")
-    bay_width_mm = st.sidebar.number_input("Bay width (mm)", min_value=1.0, value=float(default_bay_width_mm), format="%.1f")
-    geom = Geometry(span_mm=span_mm, bay_width_mm=bay_width_mm)
-    st.sidebar.markdown(f"Tributary area: {geom.tributary_area_m2:.4f} m²")
+    parent = container if container is not None else st
+
+    with parent.expander("Geometry", expanded=True):
+        span_mm = parent.number_input(
+            "Span (mm)",
+            min_value=1.0,
+            value=float(default_span_mm),
+            format="%.1f",
+            key=f"{key_prefix}_span_mm"
+        )
+        bay_width_mm = parent.number_input(
+            "Bay width (mm)",
+            min_value=1.0,
+            value=float(default_bay_width_mm),
+            format="%.1f",
+            key=f"{key_prefix}_bay_width_mm"
+        )
+
+        # quick readout
+        geom = Geometry(span_mm=span_mm, bay_width_mm=bay_width_mm)
+        parent.write(f"Tributary area: **{geom.tributary_area_m2:.4f} m²**")
+
     return geom
 
