@@ -11,10 +11,13 @@ st.title("Mullion Sizing")
 # Layout example: put geometry and material side-by-side, loads on a second row
 st.header("Geometry")
 geom = geometry_ui(container=st, key_prefix="main_geom", default_span_mm=3000, default_bay_width_mm=1000)
+st.markdown("---")
 st.header("Material")
 mat = material_ui(container=st, key_prefix="main_mat", default_type=MaterialType.ALUMINIUM)
+st.markdown("---")
 st.header("Loading")
 loads = loading_ui(container=st, key_prefix="main_load")
+st.markdown("---")
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
 
