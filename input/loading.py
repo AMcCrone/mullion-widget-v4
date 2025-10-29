@@ -174,7 +174,7 @@ def loading_ui(container=None, key_prefix: str = "load",
             max_value=5.0,
             value=float(_get_default(f"{key_prefix}_barrier_knm", 0.74)),
             step=0.01,
-            format="%.3f",
+            format="%.2f",
             key=f"{key_prefix}_barrier_knm_widget",
             help="Horizontal line load from barrier",
             disabled=not include_barrier
