@@ -233,6 +233,430 @@ def loading_ui(container=None, key_prefix: str = "load",
 
     return loading_inputs
 
+def loading_diagram_ui(container=None, key_prefix: str = "load",
+                      span_mm: float = 4000.0,
+                      bay_width_mm: float = 3000.0,
+                      loading_inputs: Optional[LoadingInputs] = None):
+    """
+    Render 3D isometric diagram showing geometry and loading.
+    
+    Parameters
+    ----------
+    container : streamlit container, optional
+        Container to render UI in (if None, uses st directly)
+    key_prefix : str
+        Prefix for session state keys
+    span_mm : float
+        Mullion span/length in mm
+    bay_width_mm : float
+        Bay width in mm
+    loading_inputs : LoadingInputs, optional
+        Loading configuration (if None, reads from session state)
+    """
+    try:
+        import streamlit as st
+        import plotly.graph_objects as go
+        import numpy as np
+    except Exception as e:
+        raise RuntimeError("loading_diagram_ui requires streamlit and plotly") from e
+
+    parent = container if container is not None else st
+    
+    # Get loading inputs if not provided
+    if loading_inputs is None:
+        if "inputs" not in st.session_state:
+            return
+        loading_inputs = LoadingInputs(
+            include_wind=st.session_state.inputs.get(f"{key_prefix}_wind_en", True),
+            wind_pressure_kpa=st.session_state.inputs.get(f"{key_prefix}_wind_kpa", 1.0),
+            bay_width_mm=bay_width_mm,
+            include_barrier=st.session_state.inputs.get(f"{key_prefix}_barrier_en", False),
+            barrier_load_kn_per_m=st.session_state.inputs.get(f"{key_prefix}_barrier_knm", 0.74),
+            barrier_height_mm=st.session_state.inputs.get(f"{key_prefix}_barrier_height", 1100.0)
+        )
+    
+    # Section header
+    parent.markdown("### 🎨 Loading Diagram")
+    parent.markdown("---")
+    
+    # Scaling for visualization (target height ~7 units for consistency)
+    target_height = 7.0
+    scale = target_height / span_mm
+    
+    # Scaled dimensions
+    height = span_mm * scale
+    bay_width = bay_width_mm * scale
+    total_width = 2 * bay_width  # Total diagram width (2x bay width as in TikZ)
+    depth = height * 0.15  # Depth proportional to height
+    mullion_width = height * 0.033  # Mullion width proportional to height
+    barrier_height = loading_inputs.barrier_height_mm * scale if loading_inputs.include_barrier else 0
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # Define colors matching TikZ theme
+    color_blue_light = 'rgba(100, 150, 255, 0.3)'
+    color_blue_mid = 'rgb(50, 100, 200)'
+    color_blue_dark = 'rgb(20, 50, 120)'
+    color_orange = 'rgb(255, 140, 0)'
+    
+    # ========== WIND LOAD SHADED AREA ==========
+    if loading_inputs.include_wind:
+        # Front face of wind load area (bay width centered in total width)
+        x_left = total_width / 4
+        x_right = 3 * total_width / 4
+        
+        # Front face
+        fig.add_trace(go.Mesh3d(
+            x=[x_left, x_right, x_right, x_left],
+            y=[0, 0, 0, 0],
+            z=[0, 0, height, height],
+            color=color_blue_light,
+            opacity=0.4,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Back face
+        fig.add_trace(go.Mesh3d(
+            x=[x_left, x_right, x_right, x_left],
+            y=[depth, depth, depth, depth],
+            z=[0, 0, height, height],
+            color=color_blue_light,
+            opacity=0.5,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Bottom face
+        fig.add_trace(go.Mesh3d(
+            x=[x_left, x_right, x_right, x_left],
+            y=[0, 0, depth, depth],
+            z=[0, 0, 0, 0],
+            color=color_blue_light,
+            opacity=0.3,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Bay width dashed boundary lines
+        fig.add_trace(go.Scatter3d(
+            x=[x_left, x_left],
+            y=[0, 0],
+            z=[0, height],
+            mode='lines',
+            line=dict(color=color_blue_mid, width=3, dash='dash'),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        fig.add_trace(go.Scatter3d(
+            x=[x_right, x_right],
+            y=[0, 0],
+            z=[0, height],
+            mode='lines',
+            line=dict(color=color_blue_mid, width=3, dash='dash'),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Wind load arrows distributed across the area
+        arrow_positions_y = [0.15, 0.35, 0.55, 0.75, 0.95]
+        arrow_positions_x = [0.3, 0.45, 0.6, 0.75]
+        
+        for y_frac in arrow_positions_y:
+            for x_frac in arrow_positions_x:
+                x_pos = x_frac * total_width
+                z_pos = y_frac * height
+                
+                # Arrow shaft
+                fig.add_trace(go.Scatter3d(
+                    x=[x_pos, x_pos],
+                    y=[0, depth * 0.67],
+                    z=[z_pos, z_pos],
+                    mode='lines',
+                    line=dict(color=color_blue_mid, width=2),
+                    showlegend=False,
+                    hoverinfo='skip'
+                ))
+                
+                # Arrow head (cone)
+                fig.add_trace(go.Cone(
+                    x=[x_pos],
+                    y=[depth * 0.67],
+                    z=[z_pos],
+                    u=[0],
+                    v=[-0.3],
+                    w=[0],
+                    colorscale=[[0, color_blue_mid], [1, color_blue_mid]],
+                    showscale=False,
+                    sizemode='absolute',
+                    sizeref=0.3,
+                    showlegend=False,
+                    hoverinfo='skip'
+                ))
+    
+    # ========== MULLIONS (3 vertical box sections) ==========
+    mullion_positions = [0, total_width / 2, total_width]
+    
+    for x_center in mullion_positions:
+        x_left = x_center - mullion_width / 2
+        x_right = x_center + mullion_width / 2
+        
+        # Front face
+        fig.add_trace(go.Scatter3d(
+            x=[x_left, x_right, x_right, x_left, x_left],
+            y=[0, 0, 0, 0, 0],
+            z=[0, 0, height, height, 0],
+            mode='lines',
+            line=dict(color=color_blue_dark, width=4),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Side edges
+        for x in [x_left, x_right]:
+            fig.add_trace(go.Scatter3d(
+                x=[x, x],
+                y=[0, depth],
+                z=[0, 0],
+                mode='lines',
+                line=dict(color=color_blue_dark, width=3),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            fig.add_trace(go.Scatter3d(
+                x=[x, x],
+                y=[0, depth],
+                z=[height, height],
+                mode='lines',
+                line=dict(color=color_blue_dark, width=3),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+        
+        # Back face (lighter)
+        fig.add_trace(go.Scatter3d(
+            x=[x_left, x_right, x_right, x_left, x_left],
+            y=[depth, depth, depth, depth, depth],
+            z=[0, 0, height, height, 0],
+            mode='lines',
+            line=dict(color=color_blue_dark, width=2),
+            opacity=0.5,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+    
+    # ========== TRANSOMS (horizontal beams at top and bottom) ==========
+    x_min = -mullion_width / 2
+    x_max = total_width + mullion_width / 2
+    
+    for z_pos in [0, height]:  # Bottom and top
+        # Front edge
+        fig.add_trace(go.Scatter3d(
+            x=[x_min, x_max],
+            y=[0, 0],
+            z=[z_pos, z_pos],
+            mode='lines',
+            line=dict(color=color_blue_dark, width=4),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Side edges
+        for x in [x_min, x_max]:
+            fig.add_trace(go.Scatter3d(
+                x=[x, x],
+                y=[0, depth],
+                z=[z_pos, z_pos],
+                mode='lines',
+                line=dict(color=color_blue_dark, width=3),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+        
+        # Back edge
+        fig.add_trace(go.Scatter3d(
+            x=[x_min, x_max],
+            y=[depth, depth],
+            z=[z_pos, z_pos],
+            mode='lines',
+            line=dict(color=color_blue_dark, width=3),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+    
+    # ========== BARRIER LOAD ==========
+    if loading_inputs.include_barrier and barrier_height > 0:
+        x_left = total_width / 4
+        x_right = 3 * total_width / 4
+        arrow_length = depth * 1.33
+        
+        # Horizontal line load with arrows
+        # Left arrow
+        fig.add_trace(go.Scatter3d(
+            x=[x_left, x_left],
+            y=[0, arrow_length],
+            z=[barrier_height, barrier_height],
+            mode='lines',
+            line=dict(color=color_orange, width=5),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        fig.add_trace(go.Cone(
+            x=[x_left],
+            y=[arrow_length],
+            z=[barrier_height],
+            u=[0],
+            v=[-0.4],
+            w=[0],
+            colorscale=[[0, color_orange], [1, color_orange]],
+            showscale=False,
+            sizemode='absolute',
+            sizeref=0.4,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Horizontal connecting line
+        fig.add_trace(go.Scatter3d(
+            x=[x_left, x_right],
+            y=[arrow_length, arrow_length],
+            z=[barrier_height, barrier_height],
+            mode='lines',
+            line=dict(color=color_orange, width=5),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Right arrow
+        fig.add_trace(go.Scatter3d(
+            x=[x_right, x_right],
+            y=[0, arrow_length],
+            z=[barrier_height, barrier_height],
+            mode='lines',
+            line=dict(color=color_orange, width=5),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        fig.add_trace(go.Cone(
+            x=[x_right],
+            y=[arrow_length],
+            z=[barrier_height],
+            u=[0],
+            v=[-0.4],
+            w=[0],
+            colorscale=[[0, color_orange], [1, color_orange]],
+            showscale=False,
+            sizemode='absolute',
+            sizeref=0.4,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Dashed reference line at barrier height
+        fig.add_trace(go.Scatter3d(
+            x=[x_left, x_right],
+            y=[0, 0],
+            z=[barrier_height, barrier_height],
+            mode='lines',
+            line=dict(color=color_orange, width=2, dash='dash'),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+    
+    # ========== ANNOTATIONS ==========
+    annotations = []
+    
+    # Bay width dimension
+    annotations.append(dict(
+        x=total_width / 2,
+        y=0,
+        z=-0.7,
+        text=f"Bay width = {bay_width_mm:.0f} mm",
+        showarrow=False,
+        font=dict(size=12, color=color_blue_dark)
+    ))
+    
+    # Mullion length dimension
+    annotations.append(dict(
+        x=x_min - 0.5,
+        y=0,
+        z=height / 2,
+        text=f"Length = {span_mm:.0f} mm",
+        showarrow=False,
+        font=dict(size=12, color=color_blue_dark),
+        textangle=-90
+    ))
+    
+    # Wind load label
+    if loading_inputs.include_wind:
+        annotations.append(dict(
+            x=total_width * 0.85,
+            y=arrow_length + 1 if loading_inputs.include_barrier else depth + 1,
+            z=height / 2,
+            text=f"Wind: {loading_inputs.wind_pressure_kpa:.2f} kPa",
+            showarrow=False,
+            font=dict(size=12, color=color_blue_mid)
+        ))
+    
+    # Barrier load label
+    if loading_inputs.include_barrier:
+        annotations.append(dict(
+            x=total_width / 2,
+            y=arrow_length + 0.5,
+            z=barrier_height,
+            text=f"Barrier: {loading_inputs.barrier_load_kn_per_m:.2f} kN/m",
+            showarrow=False,
+            font=dict(size=12, color=color_orange)
+        ))
+        
+        # Barrier height dimension
+        annotations.append(dict(
+            x=total_width / 4 - 0.5,
+            y=0,
+            z=barrier_height / 2,
+            text=f"{loading_inputs.barrier_height_mm:.0f} mm",
+            showarrow=False,
+            font=dict(size=11, color=color_orange),
+            textangle=-90
+        ))
+    
+    # Update layout
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(visible=False, range=[x_min - 1, x_max + 1]),
+            yaxis=dict(visible=False, range=[-1, depth + 3]),
+            zaxis=dict(visible=False, range=[-1, height + 1]),
+            aspectmode='data',
+            camera=dict(
+                eye=dict(x=1.5, y=1.5, z=1.2),
+                center=dict(x=0, y=0, z=0)
+            ),
+            annotations=annotations
+        ),
+        showlegend=False,
+        margin=dict(l=0, r=0, t=30, b=0),
+        height=600,
+        paper_bgcolor='white',
+        plot_bgcolor='white'
+    )
+    
+    parent.plotly_chart(fig, use_container_width=True)
+    
+    # Caption
+    caption_parts = []
+    if loading_inputs.include_wind:
+        caption_parts.append(f"wind load ({loading_inputs.wind_pressure_kpa:.2f} kPa)")
+    if loading_inputs.include_barrier:
+        caption_parts.append(f"barrier load ({loading_inputs.barrier_load_kn_per_m:.2f} kN/m at {loading_inputs.barrier_height_mm:.0f} mm)")
+    
+    if caption_parts:
+        caption = f"**Figure:** Loaded bay geometry showing {' and '.join(caption_parts)}. Bay width represents the tributary area for wind loading."
+        parent.caption(caption)
 
 # For backwards compatibility with existing code
 @dataclass
