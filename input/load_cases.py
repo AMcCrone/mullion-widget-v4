@@ -298,32 +298,6 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     # Display number of SLS cases
     parent.caption(f"📋 {len(edited_sls)} SLS load case(s) defined")
     
-    parent.markdown("---")
-    
-    # ========== LOAD CASE SUMMARY ==========
-    parent.markdown("---")
-    parent.markdown("#### 📈 Load Case Summary")
-    
-    sum_col1, sum_col2 = parent.columns(2)
-    
-    with sum_col1:
-        parent.info(f"""
-        **ULS Load Cases:** {len(edited_uls)}
-        
-        Maximum factors:
-        - Wind: {edited_uls['Wind Factor'].max():.2f} (γW,max)
-        - Barrier: {edited_uls['Barrier Factor'].max():.2f} (γL,max)
-        """)
-    
-    with sum_col2:
-        parent.info(f"""
-        **SLS Load Cases:** {len(edited_sls)}
-        
-        Maximum factors:
-        - Wind: {edited_sls['Wind Factor'].max():.2f} (γW,max)
-        - Barrier: {edited_sls['Barrier Factor'].max():.2f} (γL,max)
-        """)
-    
     # Update LoadCaseSet from edited dataframes
     load_case_set = LoadCaseSet()
     load_case_set.update_from_dataframes(edited_uls, edited_sls)
