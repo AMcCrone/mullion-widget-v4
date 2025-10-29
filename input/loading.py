@@ -187,7 +187,7 @@ def loading_ui(container=None, key_prefix: str = "load",
             max_value=2000.0,
             value=float(_get_default(f"{key_prefix}_barrier_height", 1100.0)),
             step=50.0,
-            format="%.1f",
+            format="%.0f",
             key=f"{key_prefix}_barrier_height_widget",
             help="Height above mullion base where barrier load acts",
             disabled=not include_barrier
