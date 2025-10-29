@@ -89,6 +89,7 @@ def material_ui(container=None, key_prefix: str = "mat",
         )
         st.session_state.inputs[f"{key_prefix}_type"] = mtype
 
+    with col2:
         # grade select, include "Custom"
         grades = Material.available_grades(mtype)
         grade_options = ["Custom"] + grades
@@ -98,43 +99,42 @@ def material_ui(container=None, key_prefix: str = "mat",
             default_grade_idx = grade_options.index(saved_grade)
         selected_grade = parent.selectbox("Grade / alloy", options=grade_options, index=default_grade_idx, key=f"{key_prefix}_grade_widget")
         st.session_state.inputs[f"{key_prefix}_grade"] = selected_grade
+        
+    if selected_grade == "Custom":
+        parent.markdown("Enter custom properties:")
+        E = parent.number_input("E (Pa)", value=float(_get_default(f"{key_prefix}_E", 69e9 if mtype == MaterialType.ALUMINIUM else 210e9)), format="%.6e", key=f"{key_prefix}_E_widget")
+        density = parent.number_input("Density (kg/m³)", value=float(_get_default(f"{key_prefix}_density", 2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0)), format="%.3f", key=f"{key_prefix}_density_widget")
+        fy = parent.number_input("fy (Pa)", value=float(_get_default(f"{key_prefix}_fy", 155e6 if mtype == MaterialType.ALUMINIUM else 275e6)), format="%.3e", key=f"{key_prefix}_fy_widget")
+        fu = parent.number_input("fu (Pa)", value=float(_get_default(f"{key_prefix}_fu", 200e6 if mtype == MaterialType.ALUMINIUM else 430e6)), format="%.3e", key=f"{key_prefix}_fu_widget")
 
-    with col2:
-        if selected_grade == "Custom":
-            parent.markdown("Enter custom properties:")
-            E = parent.number_input("E (Pa)", value=float(_get_default(f"{key_prefix}_E", 69e9 if mtype == MaterialType.ALUMINIUM else 210e9)), format="%.6e", key=f"{key_prefix}_E_widget")
-            density = parent.number_input("Density (kg/m³)", value=float(_get_default(f"{key_prefix}_density", 2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0)), format="%.3f", key=f"{key_prefix}_density_widget")
-            fy = parent.number_input("fy (Pa)", value=float(_get_default(f"{key_prefix}_fy", 155e6 if mtype == MaterialType.ALUMINIUM else 275e6)), format="%.3e", key=f"{key_prefix}_fy_widget")
-            fu = parent.number_input("fu (Pa)", value=float(_get_default(f"{key_prefix}_fu", 200e6 if mtype == MaterialType.ALUMINIUM else 430e6)), format="%.3e", key=f"{key_prefix}_fu_widget")
+        # save to session
+        st.session_state.inputs[f"{key_prefix}_E"] = E
+        st.session_state.inputs[f"{key_prefix}_density"] = density
+        st.session_state.inputs[f"{key_prefix}_fy"] = fy
+        st.session_state.inputs[f"{key_prefix}_fu"] = fu
 
-            # save to session
-            st.session_state.inputs[f"{key_prefix}_E"] = E
-            st.session_state.inputs[f"{key_prefix}_density"] = density
-            st.session_state.inputs[f"{key_prefix}_fy"] = fy
-            st.session_state.inputs[f"{key_prefix}_fu"] = fu
+        mat = Material(material_type=mtype, grade="Custom", E=E, density=density, fy=fy, fu=fu)
+    else:
+        # try library
+        try:
+            mat = Material.from_library(mtype, selected_grade)
+        except KeyError:
+            parent.error("Selected grade not found; switch to Custom to enter properties.")
+            # fallback
+            mat = Material(material_type=mtype, grade="CustomFallback",
+                           E=69e9 if mtype == MaterialType.ALUMINIUM else 210e9,
+                           density=2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0,
+                           fy=155e6 if mtype == MaterialType.ALUMINIUM else 275e6,
+                           fu=200e6 if mtype == MaterialType.ALUMINIUM else 430e6)
 
-            mat = Material(material_type=mtype, grade="Custom", E=E, density=density, fy=fy, fu=fu)
-        else:
-            # try library
-            try:
-                mat = Material.from_library(mtype, selected_grade)
-            except KeyError:
-                parent.error("Selected grade not found; switch to Custom to enter properties.")
-                # fallback
-                mat = Material(material_type=mtype, grade="CustomFallback",
-                               E=69e9 if mtype == MaterialType.ALUMINIUM else 210e9,
-                               density=2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0,
-                               fy=155e6 if mtype == MaterialType.ALUMINIUM else 275e6,
-                               fu=200e6 if mtype == MaterialType.ALUMINIUM else 430e6)
+    # summary readout
+    parent.write("**Material summary**")
+    parent.write(f"- Type: {mat.material_type.value}")
+    parent.write(f"- Grade: {mat.grade}")
+    parent.write(f"- E: {mat.E:.3e} Pa • fy: {mat.fy:.3e} Pa • density: {mat.density:.1f} kg/m³")
 
-        # summary readout
-        parent.write("**Material summary**")
-        parent.write(f"- Type: {mat.material_type.value}")
-        parent.write(f"- Grade: {mat.grade}")
-        parent.write(f"- E: {mat.E:.3e} Pa • fy: {mat.fy:.3e} Pa • density: {mat.density:.1f} kg/m³")
-
-        # Save primary selections to session_state for persistence
-        st.session_state.inputs[f"{key_prefix}_type"] = mtype
-        st.session_state.inputs[f"{key_prefix}_grade"] = selected_grade
+    # Save primary selections to session_state for persistence
+    st.session_state.inputs[f"{key_prefix}_type"] = mtype
+    st.session_state.inputs[f"{key_prefix}_grade"] = selected_grade
 
     return mat
