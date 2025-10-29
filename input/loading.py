@@ -274,11 +274,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             barrier_load_kn_per_m=st.session_state.inputs.get(f"{key_prefix}_barrier_knm", 0.74),
             barrier_height_mm=st.session_state.inputs.get(f"{key_prefix}_barrier_height", 1100.0)
         )
-    
-    # Section header
-    parent.markdown("### 🎨 Loading Diagram")
-    parent.markdown("---")
-    
+      
     # Scaling for visualization (target height ~7 units for consistency)
     target_height = 7.0
     scale = target_height / span_mm
@@ -295,10 +291,10 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
     fig = go.Figure()
     
     # Define colors matching TikZ theme
-    color_blue_light = 'rgba(100, 150, 255, 0.3)'
-    color_blue_mid = 'rgb(50, 100, 200)'
-    color_blue_dark = 'rgb(20, 50, 120)'
-    color_orange = 'rgb(255, 140, 0)'
+    TT_light_blue = 'rgba(136,219,223,0.3)'
+    TT_mid_blue = 'rgb(0,163,173)'
+    TT_dark_blue = 'rgb(0,48,60)'
+    TT_orange = 'rgb(211,69,29)'
     
     # ========== WIND LOAD SHADED AREA ==========
     if loading_inputs.include_wind:
@@ -311,7 +307,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             x=[x_left, x_right, x_right, x_left],
             y=[0, 0, 0, 0],
             z=[0, 0, height, height],
-            color=color_blue_light,
+            color=TT_light_blue,
             opacity=0.4,
             showlegend=False,
             hoverinfo='skip'
@@ -322,7 +318,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             x=[x_left, x_right, x_right, x_left],
             y=[depth, depth, depth, depth],
             z=[0, 0, height, height],
-            color=color_blue_light,
+            color=TT_light_blue,
             opacity=0.5,
             showlegend=False,
             hoverinfo='skip'
@@ -333,7 +329,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             x=[x_left, x_right, x_right, x_left],
             y=[0, 0, depth, depth],
             z=[0, 0, 0, 0],
-            color=color_blue_light,
+            color=TT_light_blue,
             opacity=0.3,
             showlegend=False,
             hoverinfo='skip'
@@ -345,7 +341,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, 0],
             z=[0, height],
             mode='lines',
-            line=dict(color=color_blue_mid, width=3, dash='dash'),
+            line=dict(color=TT_mid_blue, width=3, dash='dash'),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -355,7 +351,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, 0],
             z=[0, height],
             mode='lines',
-            line=dict(color=color_blue_mid, width=3, dash='dash'),
+            line=dict(color=TT_mid_blue, width=3, dash='dash'),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -375,7 +371,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
                     y=[0, depth * 0.67],
                     z=[z_pos, z_pos],
                     mode='lines',
-                    line=dict(color=color_blue_mid, width=2),
+                    line=dict(color=TT_mid_blue, width=2),
                     showlegend=False,
                     hoverinfo='skip'
                 ))
@@ -388,7 +384,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
                     u=[0],
                     v=[-0.3],
                     w=[0],
-                    colorscale=[[0, color_blue_mid], [1, color_blue_mid]],
+                    colorscale=[[0, TT_mid_blue], [1, TT_mid_blue]],
                     showscale=False,
                     sizemode='absolute',
                     sizeref=0.3,
@@ -409,7 +405,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, 0, 0, 0, 0],
             z=[0, 0, height, height, 0],
             mode='lines',
-            line=dict(color=color_blue_dark, width=4),
+            line=dict(color=TT_dark_blue, width=4),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -421,7 +417,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
                 y=[0, depth],
                 z=[0, 0],
                 mode='lines',
-                line=dict(color=color_blue_dark, width=3),
+                line=dict(color=TT_dark_blue, width=3),
                 showlegend=False,
                 hoverinfo='skip'
             ))
@@ -431,7 +427,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
                 y=[0, depth],
                 z=[height, height],
                 mode='lines',
-                line=dict(color=color_blue_dark, width=3),
+                line=dict(color=TT_dark_blue, width=3),
                 showlegend=False,
                 hoverinfo='skip'
             ))
@@ -442,7 +438,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[depth, depth, depth, depth, depth],
             z=[0, 0, height, height, 0],
             mode='lines',
-            line=dict(color=color_blue_dark, width=2),
+            line=dict(color=TT_dark_blue, width=2),
             opacity=0.5,
             showlegend=False,
             hoverinfo='skip'
@@ -459,7 +455,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, 0],
             z=[z_pos, z_pos],
             mode='lines',
-            line=dict(color=color_blue_dark, width=4),
+            line=dict(color=TT_dark_blue, width=4),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -471,7 +467,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
                 y=[0, depth],
                 z=[z_pos, z_pos],
                 mode='lines',
-                line=dict(color=color_blue_dark, width=3),
+                line=dict(color=TT_dark_blue, width=3),
                 showlegend=False,
                 hoverinfo='skip'
             ))
@@ -482,7 +478,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[depth, depth],
             z=[z_pos, z_pos],
             mode='lines',
-            line=dict(color=color_blue_dark, width=3),
+            line=dict(color=TT_dark_blue, width=3),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -500,7 +496,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, arrow_length],
             z=[barrier_height, barrier_height],
             mode='lines',
-            line=dict(color=color_orange, width=5),
+            line=dict(color=TT_orange, width=5),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -512,7 +508,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             u=[0],
             v=[-0.4],
             w=[0],
-            colorscale=[[0, color_orange], [1, color_orange]],
+            colorscale=[[0, TT_orange], [1, TT_orange]],
             showscale=False,
             sizemode='absolute',
             sizeref=0.4,
@@ -526,7 +522,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[arrow_length, arrow_length],
             z=[barrier_height, barrier_height],
             mode='lines',
-            line=dict(color=color_orange, width=5),
+            line=dict(color=TT_orange, width=5),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -537,7 +533,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, arrow_length],
             z=[barrier_height, barrier_height],
             mode='lines',
-            line=dict(color=color_orange, width=5),
+            line=dict(color=TT_orange, width=5),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -549,7 +545,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             u=[0],
             v=[-0.4],
             w=[0],
-            colorscale=[[0, color_orange], [1, color_orange]],
+            colorscale=[[0, TT_orange], [1, TT_orange]],
             showscale=False,
             sizemode='absolute',
             sizeref=0.4,
@@ -563,7 +559,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             y=[0, 0],
             z=[barrier_height, barrier_height],
             mode='lines',
-            line=dict(color=color_orange, width=2, dash='dash'),
+            line=dict(color=TT_orange, width=2, dash='dash'),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -578,7 +574,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
         z=-0.7,
         text=f"Bay width = {bay_width_mm:.0f} mm",
         showarrow=False,
-        font=dict(size=12, color=color_blue_dark)
+        font=dict(size=12, color=TT_dark_blue)
     ))
     
     # Mullion length dimension
@@ -588,7 +584,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
         z=height / 2,
         text=f"Length = {span_mm:.0f} mm",
         showarrow=False,
-        font=dict(size=12, color=color_blue_dark),
+        font=dict(size=12, color=TT_dark_blue),
         textangle=-90
     ))
     
@@ -600,7 +596,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             z=height / 2,
             text=f"Wind: {loading_inputs.wind_pressure_kpa:.2f} kPa",
             showarrow=False,
-            font=dict(size=12, color=color_blue_mid)
+            font=dict(size=12, color=TT_mid_blue)
         ))
     
     # Barrier load label
@@ -611,7 +607,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             z=barrier_height,
             text=f"Barrier: {loading_inputs.barrier_load_kn_per_m:.2f} kN/m",
             showarrow=False,
-            font=dict(size=12, color=color_orange)
+            font=dict(size=12, color=TT_orange)
         ))
         
         # Barrier height dimension
@@ -621,7 +617,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
             z=barrier_height / 2,
             text=f"{loading_inputs.barrier_height_mm:.0f} mm",
             showarrow=False,
-            font=dict(size=11, color=color_orange),
+            font=dict(size=11, color=TT_orange),
             textangle=-90
         ))
     
