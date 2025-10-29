@@ -4,7 +4,7 @@ from input.geometry import geometry_ui
 from input.material import material_ui, MaterialType
 from input.loading import loading_ui
 
-st.set_page_config(page_title="Mullion Sizing", layout="wide")
+st.set_page_config(page_title="Mullion Sizing")
 st.title("Mullion Sizing)")
 
 # Layout example: put geometry and material side-by-side, loads on a second row
