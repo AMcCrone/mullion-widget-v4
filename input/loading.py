@@ -210,14 +210,14 @@ def loading_ui(container=None, key_prefix: str = "load",
     with sum_col1:
         parent.metric(
             "Wind Load",
-            f"{loading_inputs.wind_load_n_per_mm():.4f} N/mm" if include_wind else "Not included",
+            f"{loading_inputs.wind_load_n_per_mm():.2f} N/mm" if include_wind else "Not included",
             help="Uniform distributed load from wind"
         )
     
     with sum_col2:
         parent.metric(
             "Barrier Load",
-            f"{loading_inputs.barrier_load_n_per_mm():.4f} N/mm" if include_barrier else "Not included",
+            f"{loading_inputs.barrier_load_n_per_mm():.2f} N/mm" if include_barrier else "Not included",
             help="Line load from barrier/balustrade"
         )
     
