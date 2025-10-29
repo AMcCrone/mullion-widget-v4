@@ -51,7 +51,7 @@ class LoadingInputs:
     
     # Barrier load
     include_barrier: bool = False
-    barrier_load_kn: float = 0.74  # Point load in kN
+    barrier_load_kn_per_m: float = 0.74
     barrier_height_mm: float = 1100.0
     
     def wind_load_n_per_mm(self) -> float:
@@ -64,15 +64,15 @@ class LoadingInputs:
             return 0.0
         return self.wind_pressure_kpa * self.bay_width_mm * 1e-3
     
-    def barrier_load_n(self) -> float:
+    def barrier_load_n_per_mm(self) -> float:
         """
-        Convert barrier load to N (point load on mullion)
+        Convert barrier load to N/mm
         
-        Barrier load (kN) × 1000 = N
+        Barrier load (kN/m) = N/mm (no conversion needed)
         """
         if not self.include_barrier:
             return 0.0
-        return self.barrier_load_kn * 1000.0
+        return self.barrier_load_kn_per_m
     
     def to_loads(self) -> List[Load]:
         """Convert input values to Load objects"""
@@ -86,11 +86,10 @@ class LoadingInputs:
             ))
         
         if self.include_barrier:
-            # Barrier is a point load, not distributed
             loads.append(Load(
                 kind=LoadKind.BARRIER,
-                magnitude=self.barrier_load_n(),
-                distribution="point",
+                magnitude=self.barrier_load_n_per_mm(),
+                distribution="uniform",
                 height_mm=self.barrier_height_mm
             ))
         
@@ -129,10 +128,6 @@ def loading_ui(container=None, key_prefix: str = "load",
     def _get_default(name, fallback):
         return st.session_state.inputs.get(name, fallback)
 
-    # Section header
-    parent.markdown("### 🌬️ Loading Definition")
-    parent.markdown("---")
-
     # Layout: two columns for better organization
     col1, col2 = parent.columns(2)
 
@@ -160,29 +155,16 @@ def loading_ui(container=None, key_prefix: str = "load",
             disabled=not include_wind
         )
         st.session_state.inputs[f"{key_prefix}_wind_kpa"] = wind_pressure_kpa
-        
-        if include_wind:
-            # Calculate and display derived values
-            wind_n_per_mm = wind_pressure_kpa * bay_width_mm * 1e-3
-            wind_n_per_m = wind_n_per_mm * 1000.0
-            
-            parent.info(f"""
-            **Calculated wind load:**
-            - {wind_n_per_mm:.4f} N/mm
-            - {wind_n_per_m:.2f} N/m
-            
-            *Calculation: {wind_pressure_kpa} kPa × {bay_width_mm} mm × 10⁻³*
-            """)
 
     # ========== BARRIER LOAD ==========
     with col2:
-        parent.markdown("#### Barrier/Balustrade Load")
+        parent.markdown("#### Barrier Load")
         
         include_barrier = parent.checkbox(
             "Include barrier load",
             value=bool(_get_default(f"{key_prefix}_barrier_en", False)),
             key=f"{key_prefix}_barrier_en_widget",
-            help="Check to include horizontal line load from barrier/balustrade"
+            help="Check to include horizontal line load from barrier"
         )
         st.session_state.inputs[f"{key_prefix}_barrier_en"] = include_barrier
         
@@ -192,9 +174,9 @@ def loading_ui(container=None, key_prefix: str = "load",
             max_value=5.0,
             value=float(_get_default(f"{key_prefix}_barrier_knm", 0.74)),
             step=0.01,
-            format="%.3f",
+            format="%.2f",
             key=f"{key_prefix}_barrier_knm_widget",
-            help="Horizontal line load from barrier (e.g., 0.74 kN/m for UK building regs)",
+            help="Horizontal line load from barrier",
             disabled=not include_barrier
         )
         st.session_state.inputs[f"{key_prefix}_barrier_knm"] = barrier_load_kn_per_m
@@ -205,29 +187,13 @@ def loading_ui(container=None, key_prefix: str = "load",
             max_value=2000.0,
             value=float(_get_default(f"{key_prefix}_barrier_height", 1100.0)),
             step=50.0,
-            format="%.1f",
+            format="%.0f",
             key=f"{key_prefix}_barrier_height_widget",
             help="Height above mullion base where barrier load acts",
             disabled=not include_barrier
         )
         st.session_state.inputs[f"{key_prefix}_barrier_height"] = barrier_height_mm
-        
-        if include_barrier:
-            # Display info (kN/m = N/mm, no conversion needed)
-            barrier_n_per_mm = barrier_load_kn_per_m
-            
-            parent.info(f"""
-            **Calculated barrier load:**
-            - {barrier_n_per_mm:.4f} N/mm
-            - {barrier_height_mm:.0f} mm above base
-            
-            *Note: 1 kN/m = 1 N/mm (no conversion needed)*
-            """)
 
-    # ========== LOAD SUMMARY ==========
-    parent.markdown("---")
-    parent.markdown("#### 📊 Load Summary")
-    
     # Create LoadingInputs object
     loading_inputs = LoadingInputs(
         include_wind=include_wind,
@@ -244,14 +210,14 @@ def loading_ui(container=None, key_prefix: str = "load",
     with sum_col1:
         parent.metric(
             "Wind Load",
-            f"{loading_inputs.wind_load_n_per_mm():.4f} N/mm" if include_wind else "Not included",
+            f"{loading_inputs.wind_load_n_per_mm():.2f} N/mm" if include_wind else "Not included",
             help="Uniform distributed load from wind"
         )
     
     with sum_col2:
         parent.metric(
             "Barrier Load",
-            f"{loading_inputs.barrier_load_n_per_mm():.4f} N/mm" if include_barrier else "Not included",
+            f"{loading_inputs.barrier_load_n_per_mm():.2f} N/mm" if include_barrier else "Not included",
             help="Line load from barrier/balustrade"
         )
     
@@ -264,15 +230,6 @@ def loading_ui(container=None, key_prefix: str = "load",
             )
         else:
             parent.metric("Barrier Height", "N/A")
-    
-    # Total load (if both included)
-    if include_wind or include_barrier:
-        total_udl = loading_inputs.wind_load_n_per_mm() + loading_inputs.barrier_load_n_per_mm()
-        parent.info(f"""
-        **Combined uniform load:** {total_udl:.4f} N/mm ({total_udl * 1000:.2f} N/m)
-        
-        *This represents the total distributed load before applying load case factors*
-        """)
 
     return loading_inputs
 
