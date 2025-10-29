@@ -18,24 +18,16 @@ mat = material_ui(container=st, key_prefix="main_mat", default_type=MaterialType
 st.markdown("---")
 
 st.header("Loading")
-loads = loading_ui(container=st, key_prefix="main_load")
 # Get geometry from session state
 span_mm = st.session_state.inputs.get("geom_span_mm", 4000.0)
 bay_width_mm = st.session_state.inputs.get("geom_bay_width_mm", 3000.0)
-# Get loading inputs
-loading_inputs = loading_ui(bay_width_mm=bay_width_mm)
-loading_diagram_ui(span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
+# Get loading inputs (only call once)
+loading_inputs = loading_ui(container=st, key_prefix="main_load", bay_width_mm=bay_width_mm)
+# Display diagram using the same loading_inputs
+loading_diagram_ui(container=st,key_prefix="main_load",span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
 st.markdown("---")
 
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
 
 st.markdown("---")
-st.header("Summary")
-st.write("Geometry:", geom.as_dict())
-st.write("Material:", {"type": mat.material_type.value, "grade": mat.grade, "E (Pa)": mat.E})
-st.write("Load case:", {"name": loads.name, "case_type": loads.case_type})
-st.write("Loads list:", loads.loads)
-
-if st.button("Run analysis"):
-    st.success("Now you can call analysis modules with these dataclasses.")
