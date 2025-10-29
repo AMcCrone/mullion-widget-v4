@@ -1,4 +1,3 @@
-# src/app/main.py (snippet)
 import streamlit as st
 from inputs.geometry import geometry_ui
 from inputs.material import material_ui, MaterialType
@@ -18,16 +17,17 @@ mat = material_ui(container=st, key_prefix="main_mat", default_type=MaterialType
 st.markdown("---")
 
 st.header("Loading")
-# Get geometry from session state
-span_mm = st.session_state.inputs.get("geom_span_mm", 4000.0)
-bay_width_mm = st.session_state.inputs.get("geom_bay_width_mm", 3000.0)
+# Get geometry from session state using the CORRECT keys with the key_prefix
+span_mm = st.session_state.inputs.get("main_geom_span_mm", 3000.0)
+bay_width_mm = st.session_state.inputs.get("main_geom_bay_width_mm", 1000.0)
+
 # Get loading inputs (only call once)
 loading_inputs = loading_ui(container=st, key_prefix="main_load", bay_width_mm=bay_width_mm)
+
 # Display diagram using the same loading_inputs
 loading_diagram_ui(container=st,key_prefix="main_load",span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
 st.markdown("---")
 
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
-
 st.markdown("---")
