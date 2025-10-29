@@ -9,7 +9,7 @@ st.title("Mullion Sizing")
 
 # Layout example: put geometry and material side-by-side, loads on a second row
 st.header("Geometry")
-geom = geometry_ui(container=st, key_prefix="main_geom", default_span_mm=3000, default_bay_width_mm=1000)
+geom = geometry_ui(container=st, key_prefix="main_geom", default_span_mm=4000, default_bay_width_mm=3000)
 st.markdown("---")
 
 st.header("Material")
