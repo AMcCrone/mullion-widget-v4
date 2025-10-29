@@ -79,6 +79,7 @@ def geometry_ui(container=None, key_prefix: str = "geom",
         # save into session_state so other modules/forms can read
         st.session_state.inputs[f"{key_prefix}_span_mm"] = span_mm
 
+    with col2:
         bay_width_mm = parent.number_input(
             "Bay width (mm)",
             min_value=1.0,
@@ -87,13 +88,12 @@ def geometry_ui(container=None, key_prefix: str = "geom",
             key=f"{key_prefix}_bay_width_mm_widget"
         )
         st.session_state.inputs[f"{key_prefix}_bay_width_mm"] = bay_width_mm
-
-    with col2:
-        # Display read-only computed values
-        geom = Geometry(span_mm=span_mm, bay_width_mm=bay_width_mm)
-        parent.write("**Geometry summary**")
-        parent.write(f"- Span (m): {geom.span_m:.3f}")
-        parent.write(f"- Bay width (m): {geom.bay_width_m:.3f}")
-        parent.write(f"- Tributary area (m²): {geom.tributary_area_m2:.4f}")
+        
+    # Display read-only computed values
+    geom = Geometry(span_mm=span_mm, bay_width_mm=bay_width_mm)
+    parent.write("**Geometry summary**")
+    parent.write(f"- Span (m): {geom.span_m:.3f}")
+    parent.write(f"- Bay width (m): {geom.bay_width_m:.3f}")
+    parent.write(f"- Tributary area (m²): {geom.tributary_area_m2:.4f}")
 
     return geom
