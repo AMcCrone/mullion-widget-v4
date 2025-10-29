@@ -641,7 +641,7 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
         plot_bgcolor='white'
     )
     
-    parent.plotly_chart(fig, use_container_width=True)
+    parent.plotly_chart(fig, width="stretch")
     
     # Caption
     caption_parts = []
