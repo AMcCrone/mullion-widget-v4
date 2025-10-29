@@ -125,12 +125,6 @@ def material_ui(container=None, key_prefix: str = "mat",
                            density=2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0,
                            fy=155e6 if mtype == MaterialType.ALUMINIUM else 275e6)
 
-    # summary readout
-    parent.write("**Material summary**")
-    parent.write(f"- Type: {mat.material_type.value}")
-    parent.write(f"- Grade: {mat.grade}")
-    parent.write(f"- E: {mat.E:.3e} Pa • fy: {mat.fy:.3e} Pa • density: {mat.density:.1f} kg/m³")
-
     # Save primary selections to session_state for persistence
     st.session_state.inputs[f"{key_prefix}_type"] = mtype
     st.session_state.inputs[f"{key_prefix}_grade"] = selected_grade
