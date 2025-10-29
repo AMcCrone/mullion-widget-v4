@@ -1,9 +1,9 @@
 # src/app/main.py (snippet)
 import streamlit as st
-from input.geometry import geometry_ui
-from input.material import material_ui, MaterialType
-from input.loading import loading_ui, loading_diagram_ui
-from input.load_cases import load_cases_ui
+from inputs.geometry import geometry_ui
+from inputs.material import material_ui, MaterialType
+from inputs.loading import loading_ui, loading_diagram_ui
+from inputs.load_cases import load_cases_ui
 
 st.set_page_config(page_title="Mullion Sizing")
 st.title("Mullion Sizing")
