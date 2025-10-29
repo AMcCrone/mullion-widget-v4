@@ -91,9 +91,5 @@ def geometry_ui(container=None, key_prefix: str = "geom",
         
     # Display read-only computed values
     geom = Geometry(span_mm=span_mm, bay_width_mm=bay_width_mm)
-    parent.write("**Geometry summary**")
-    parent.write(f"- Span (m): {geom.span_m:.3f}")
-    parent.write(f"- Bay width (m): {geom.bay_width_m:.3f}")
-    parent.write(f"- Tributary area (m²): {geom.tributary_area_m2:.4f}")
 
     return geom
