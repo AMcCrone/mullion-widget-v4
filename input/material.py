@@ -90,7 +90,7 @@ def material_ui(container=None, key_prefix: str = "mat",
         # grade select, include "Custom"
         grades = Material.available_grades(mtype)
         grade_options = ["Custom"] + grades
-        default_grade_idx = 0
+        default_grade_idx = 1
         saved_grade = _get_default(f"{key_prefix}_grade", default_grade)
         if saved_grade in grade_options:
             default_grade_idx = grade_options.index(saved_grade)
