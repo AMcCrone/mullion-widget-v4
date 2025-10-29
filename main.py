@@ -2,7 +2,7 @@
 import streamlit as st
 from input.geometry import geometry_ui
 from input.material import material_ui, MaterialType
-from input.loading import loading_ui
+from input.loading import loading_ui, loading_diagram_ui
 from input.load_cases import load_cases_ui
 
 st.set_page_config(page_title="Mullion Sizing")
@@ -12,12 +12,16 @@ st.title("Mullion Sizing")
 st.header("Geometry")
 geom = geometry_ui(container=st, key_prefix="main_geom", default_span_mm=3000, default_bay_width_mm=1000)
 st.markdown("---")
+
 st.header("Material")
 mat = material_ui(container=st, key_prefix="main_mat", default_type=MaterialType.ALUMINIUM)
 st.markdown("---")
+
 st.header("Loading")
 loads = loading_ui(container=st, key_prefix="main_load")
+loading_diagram_ui(span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
 st.markdown("---")
+
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
 
