@@ -51,7 +51,7 @@ class LoadingInputs:
     
     # Barrier load
     include_barrier: bool = False
-    barrier_load_kn: float = 0.74  # Changed from kN/m to kN (point load)
+    barrier_load_kn: float = 0.74  # Point load in kN
     barrier_height_mm: float = 1100.0
     
     def wind_load_n_per_mm(self) -> float:
@@ -64,22 +64,9 @@ class LoadingInputs:
             return 0.0
         return self.wind_pressure_kpa * self.bay_width_mm * 1e-3
     
-    def barrier_load_n_per_mm(self) -> float:
-        """
-        Convert barrier point load to uniform load on mullion
-        
-        Barrier load (kN) × Bay width (mm) / Bay width (mm) = kN = 1000 N
-        Then: 1000 N / Bay width (mm) = N/mm
-        
-        Simplified: Barrier load (kN) × 1000 / Bay width (mm) = N/mm
-        """
-        if not self.include_barrier:
-            return 0.0
-        return (self.barrier_load_kn * 1000.0) / self.bay_width_mm
-    
     def barrier_load_n(self) -> float:
         """
-        Convert barrier load to N
+        Convert barrier load to N (point load on mullion)
         
         Barrier load (kN) × 1000 = N
         """
@@ -99,10 +86,11 @@ class LoadingInputs:
             ))
         
         if self.include_barrier:
+            # Barrier is a point load, not distributed
             loads.append(Load(
                 kind=LoadKind.BARRIER,
-                magnitude=self.barrier_load_n_per_mm(),
-                distribution="uniform",
+                magnitude=self.barrier_load_n(),
+                distribution="point",
                 height_mm=self.barrier_height_mm
             ))
         
@@ -141,10 +129,6 @@ def loading_ui(container=None, key_prefix: str = "load",
     def _get_default(name, fallback):
         return st.session_state.inputs.get(name, fallback)
 
-    # Section header
-    parent.markdown("### 🌬️ Loading Definition")
-    parent.markdown("---")
-
     # Layout: two columns for better organization
     col1, col2 = parent.columns(2)
 
@@ -177,14 +161,6 @@ def loading_ui(container=None, key_prefix: str = "load",
             # Calculate and display derived values
             wind_n_per_mm = wind_pressure_kpa * bay_width_mm * 1e-3
             wind_n_per_m = wind_n_per_mm * 1000.0
-            
-            parent.info(f"""
-            **Calculated wind load:**
-            - {wind_n_per_mm:.4f} N/mm
-            - {wind_n_per_m:.2f} N/m
-            
-            *Calculation: {wind_pressure_kpa} kPa × {bay_width_mm} mm × 10⁻³*
-            """)
 
     # ========== BARRIER LOAD ==========
     with col2:
@@ -227,19 +203,8 @@ def loading_ui(container=None, key_prefix: str = "load",
         if include_barrier:
             # Display info (kN/m = N/mm, no conversion needed)
             barrier_n_per_mm = barrier_load_kn_per_m
-            
-            parent.info(f"""
-            **Calculated barrier load:**
-            - {barrier_n_per_mm:.4f} N/mm
-            - {barrier_height_mm:.0f} mm above base
-            
-            *Note: 1 kN/m = 1 N/mm (no conversion needed)*
-            """)
 
     # ========== LOAD SUMMARY ==========
-    parent.markdown("---")
-    parent.markdown("#### 📊 Load Summary")
-    
     # Create LoadingInputs object
     loading_inputs = LoadingInputs(
         include_wind=include_wind,
