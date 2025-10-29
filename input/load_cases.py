@@ -200,21 +200,9 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     
     if "sls_cases_df" not in st.session_state:
         st.session_state.sls_cases_df = st.session_state.load_case_set.get_sls_dataframe()
-
-    # Section header
-    parent.markdown("### 📊 Load Case Definition")
-    parent.markdown("---")
-    
-    parent.markdown("""
-    Define the load combinations for Ultimate Limit State (ULS) and Serviceability Limit State (SLS) analyses.
-    Load factors (partial factors) are applied to wind and barrier loads according to design codes.
-    
-    **Note:** You can add, remove, or modify rows in the tables below.
-    """)
     
     # ========== ULS LOAD CASES ==========
     parent.markdown("#### Ultimate Limit State (ULS) Load Cases")
-    parent.markdown("*ULS checks ensure the structure has adequate strength*")
     
     edited_uls = parent.data_editor(
         st.session_state.uls_cases_df,
@@ -258,7 +246,6 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     
     # ========== SLS LOAD CASES ==========
     parent.markdown("#### Serviceability Limit State (SLS) Load Cases")
-    parent.markdown("*SLS checks ensure the structure has acceptable deflections*")
     
     edited_sls = parent.data_editor(
         st.session_state.sls_cases_df,
@@ -304,37 +291,3 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     st.session_state.load_case_set = load_case_set
     
     return load_case_set
-
-
-def get_load_case_description() -> str:
-    """
-    Return a description of common load case standards for reference.
-    
-    Returns
-    -------
-    str
-        Markdown-formatted description
-    """
-    return """
-    ### Common Load Case Standards
-    
-    #### EN 1990 (Eurocode 0) - Typical Combinations
-    
-    **ULS (Ultimate Limit State):**
-    - Combination 1: 1.5W + 0.75L (Wind dominant)
-    - Combination 2: 0.75W + 1.5L (Barrier dominant)
-    - Combination 3: 1.5W (Wind only)
-    - Combination 4: 1.5L (Barrier only)
-    
-    **SLS (Serviceability Limit State):**
-    - Combination 1: 1.0W (Characteristic wind)
-    - Combination 2: 1.0L (Characteristic barrier)
-    
-    #### ASCE 7 - US Building Code
-    - Different factor combinations may apply
-    - Consult local jurisdiction for specific requirements
-    
-    #### Custom Combinations
-    - Can be defined based on project-specific requirements
-    - Always verify with local building codes
-    """
