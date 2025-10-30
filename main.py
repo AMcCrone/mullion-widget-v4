@@ -155,7 +155,7 @@ def cached_sls_analysis(
 st.header("Results")
 
 # Create hash strings for caching - these change when the objects change
-loading_inputs_hash = f"{loading_inputs.wind_pressure_Pa}_{loading_inputs.barrier_line_load_N_per_m}"
+loading_inputs_hash = str(vars(loading_inputs))
 load_cases_hash = f"{len(load_case_set.uls_cases)}_{len(load_case_set.sls_cases)}"
 
 with st.spinner("⏳ Analyzing load cases..."):
