@@ -380,8 +380,6 @@ for case_name, case_data in sls_results['cases'].items():
 
 st.dataframe(sls_data, width='stretch', hide_index=True)
 
-st.caption("💡 Unit deflection is the max deflection that would occur with I = 1.0 m⁴")
-
 st.markdown("---")
 
 # ========================================
