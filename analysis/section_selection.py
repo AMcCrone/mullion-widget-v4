@@ -694,15 +694,7 @@ def section_selection_ui(
 
     # parent.markdown("##### 3D Utilisation")
     
-    view_option = parent.selectbox(
-        "View",
-        options=[
-            "Isometric: Overview",
-            "XY Plane: Utilisation",
-            "XZ Plane: Section Depth"
-        ],
-        key="util_view_selector"
-    )
+    view_option = options=["Isometric: Overview","XY Plane: Utilisation","XZ Plane: Section Depth"]
     
     util_fig, recommended = generate_utilisation_plot(
         df_filtered,
