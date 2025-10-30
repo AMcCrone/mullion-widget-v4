@@ -158,7 +158,7 @@ for case_name, case_data in uls_results['cases'].items():
         "V_max (kN)": f"{case_data['V_max_N']/1000:.2f}"
     })
 
-st.dataframe(reaction_data, use_container_width=True, hide_index=True)
+st.dataframe(reaction_data, width='stretch', hide_index=True)
 
 st.markdown("---")
 
@@ -200,7 +200,7 @@ fig_V.update_layout(
     showlegend=False
 )
 
-st.plotly_chart(fig_V, use_container_width=True)
+st.plotly_chart(fig_V, width='stretch')
 
 # Show max value for selected case
 col1, col2 = st.columns(2)
@@ -248,7 +248,7 @@ fig_M.update_layout(
     showlegend=False
 )
 
-st.plotly_chart(fig_M, use_container_width=True)
+st.plotly_chart(fig_M, width='stretch')
 
 # Show max value for selected case
 col1, col2 = st.columns(2)
@@ -306,7 +306,7 @@ for case_name, case_data in sls_results['cases'].items():
         "Governing": is_governing
     })
 
-st.dataframe(sls_data, use_container_width=True, hide_index=True)
+st.dataframe(sls_data, width='stretch', hide_index=True)
 
 st.caption("💡 Unit deflection is the max deflection that would occur with I = 1.0 m⁴")
 
