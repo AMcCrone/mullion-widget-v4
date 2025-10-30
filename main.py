@@ -4,6 +4,7 @@ from inputs.material import material_ui, MaterialType
 from inputs.loading import loading_ui, loading_diagram_ui, beam_model_diagram_ui
 from inputs.load_cases import load_cases_ui
 from analysis.beam_analysis import analyze_uls_cases, analyze_sls_deflection_requirement, compute_required_section_modulus
+from analysis.section_selection import section_selection_ui
 
 import plotly.graph_objects as go
 import numpy as np
@@ -309,9 +310,15 @@ with col2:
     st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
     st.caption(f"Based on {gov_sls_case}")
 
-st.info("""
-**Next steps:**
-1. Select a standard section (e.g., from a manufacturer catalog) that satisfies both Z ≥ Z_req and I ≥ I_req
-2. Verify shear capacity if needed (not checked in this tool)
-3. Check local buckling and connection details per applicable code
-""")
+st.header("Section Selection")
+
+# Call the section selection UI
+section_selection_ui(container=st,geometry_info={'span_mm': geom.span_mm,'bay_width_mm': geom.bay_width_mm},
+    material=mat.material_type.value,  # "Aluminium" or "Steel"
+    Z_req_cm3=uls_results['governing']['Z_req_cm3'],  # From your analysis
+    I_req_cm4=sls_results['governing']['I_req_cm4'],  # From your analysis
+    defl_limit_mm=sls_results['governing']['v_limit_mm'],
+    uls_case_name=uls_results['governing']['case_name'],
+    sls_case_name=sls_results['governing']['case_name'],
+    excel_path="data/mullion_profile_db.xlsx"
+)
