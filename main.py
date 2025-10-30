@@ -3,8 +3,7 @@ from inputs.geometry import geometry_ui
 from inputs.material import material_ui, MaterialType
 from inputs.loading import loading_ui, loading_diagram_ui, beam_model_diagram_ui
 from inputs.load_cases import load_cases_ui
-from analysis.beam_analysis import analyze_loadcase
-from beam_analysis import analyze_uls_cases, analyze_sls_deflection_requirement, compute_required_section_modulus
+from analysis.beam_analysis import analyze_uls_cases, analyze_sls_deflection_requirement, compute_required_section_modulus
 
 import plotly.graph_objects as go
 import numpy as np
