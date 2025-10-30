@@ -728,7 +728,7 @@ def section_selection_ui(
     # )
     # parent.plotly_chart(util_fig, width='stretch')
 
-    recommended = generate_utilisation_plot(df_filtered,Z_req_cm3,I_req_cm4,view_option)
+    recommended = generate_utilisation_plot(df_filtered,Z_req_cm3,I_req_cm4)
     
     parent.markdown("---")
     
