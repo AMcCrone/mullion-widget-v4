@@ -201,161 +201,93 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     if "sls_cases_df" not in st.session_state:
         st.session_state.sls_cases_df = st.session_state.load_case_set.get_sls_dataframe()
     
-    # Use expander to reduce visual clutter and prevent accidental edits
-    with parent.expander("📋 Load Cases (Click to Edit)", expanded=False):
-        
-        parent.info("💡 **Tip**: Make all your changes, then click outside the table to save. The app will update automatically.")
-        
-        # ========== ULS LOAD CASES ==========
-        parent.markdown("#### Ultimate Limit State (ULS) Load Cases")
-        
-        # Add preset buttons for common load cases
-        col1, col2, col3 = parent.columns(3)
-        with col1:
-            if parent.button("➕ Add EN1990 Standard", key=f"{key_prefix}_add_en1990", help="Add standard EN1990 load cases"):
-                st.session_state.load_case_set = LoadCaseSet.create_en1990_defaults()
-                st.session_state.uls_cases_df = st.session_state.load_case_set.get_uls_dataframe()
-                st.session_state.sls_cases_df = st.session_state.load_case_set.get_sls_dataframe()
-                st.rerun()
-        
-        with col2:
-            if parent.button("🔄 Reset to Defaults", key=f"{key_prefix}_reset", help="Reset to default load cases"):
-                st.session_state.load_case_set = LoadCaseSet.create_en1990_defaults()
-                st.session_state.uls_cases_df = st.session_state.load_case_set.get_uls_dataframe()
-                st.session_state.sls_cases_df = st.session_state.load_case_set.get_sls_dataframe()
-                st.rerun()
-        
-        with col3:
-            if parent.button("🗑️ Clear All ULS", key=f"{key_prefix}_clear_uls", help="Clear all ULS cases"):
-                st.session_state.uls_cases_df = st.session_state.uls_cases_df.iloc[0:0].copy()
-                st.rerun()
-        
-        edited_uls = parent.data_editor(
-            st.session_state.uls_cases_df,
-            num_rows="dynamic",
-            use_container_width=True,
-            key=f"{key_prefix}_uls_editor",
-            column_config={
-                "Load Case": st.column_config.TextColumn(
-                    "Load Case",
-                    help="Description of load case (e.g., '1.5W + 0.75L')",
-                    width="medium",
-                    required=True
-                ),
-                "Wind Factor": st.column_config.NumberColumn(
-                    "Wind Factor (γW)",
-                    help="Partial factor applied to wind load",
-                    min_value=0.0,
-                    max_value=10.0,
-                    step=0.05,
-                    format="%.2f",
-                    width="small",
-                    default=0.0
-                ),
-                "Barrier Factor": st.column_config.NumberColumn(
-                    "Barrier Factor (γL)",
-                    help="Partial factor applied to barrier load",
-                    min_value=0.0,
-                    max_value=10.0,
-                    step=0.05,
-                    format="%.2f",
-                    width="small",
-                    default=0.0
-                )
-            },
-            hide_index=True,
-            disabled=False
-        )
-        
-        # Only update if data actually changed
-        if not edited_uls.equals(st.session_state.uls_cases_df):
-            st.session_state.uls_cases_df = edited_uls
-        
-        # Display number of ULS cases
-        parent.caption(f"✓ {len(edited_uls)} ULS load case(s) defined")
-        
-        parent.markdown("---")
-        
-        # ========== SLS LOAD CASES ==========
-        parent.markdown("#### Serviceability Limit State (SLS) Load Cases")
-        
-        # Add preset buttons for SLS
-        col1, col2 = parent.columns(2)
-        with col1:
-            if parent.button("➕ Add Standard SLS", key=f"{key_prefix}_add_sls_standard", help="Add W and L characteristic cases"):
-                # Add standard SLS cases if not present
-                new_rows = [
-                    {"Load Case": "W (Characteristic)", "Wind Factor": 1.0, "Barrier Factor": 0.0},
-                    {"Load Case": "L (Characteristic)", "Wind Factor": 0.0, "Barrier Factor": 1.0}
-                ]
-                import pandas as pd
-                st.session_state.sls_cases_df = pd.concat([
-                    st.session_state.sls_cases_df,
-                    pd.DataFrame(new_rows)
-                ], ignore_index=True)
-                st.rerun()
-        
-        with col2:
-            if parent.button("🗑️ Clear All SLS", key=f"{key_prefix}_clear_sls", help="Clear all SLS cases"):
-                st.session_state.sls_cases_df = st.session_state.sls_cases_df.iloc[0:0].copy()
-                st.rerun()
-        
-        edited_sls = parent.data_editor(
-            st.session_state.sls_cases_df,
-            num_rows="dynamic",
-            use_container_width=True,
-            key=f"{key_prefix}_sls_editor",
-            column_config={
-                "Load Case": st.column_config.TextColumn(
-                    "Load Case",
-                    help="Description of load case (e.g., 'W' or 'L')",
-                    width="medium",
-                    required=True
-                ),
-                "Wind Factor": st.column_config.NumberColumn(
-                    "Wind Factor (γW)",
-                    help="Partial factor applied to wind load",
-                    min_value=0.0,
-                    max_value=5.0,
-                    step=0.05,
-                    format="%.2f",
-                    width="small",
-                    default=0.0
-                ),
-                "Barrier Factor": st.column_config.NumberColumn(
-                    "Barrier Factor (γL)",
-                    help="Partial factor applied to barrier load",
-                    min_value=0.0,
-                    max_value=5.0,
-                    step=0.05,
-                    format="%.2f",
-                    width="small",
-                    default=0.0
-                )
-            },
-            hide_index=True,
-            disabled=False
-        )
-        
-        # Only update if data actually changed
-        if not edited_sls.equals(st.session_state.sls_cases_df):
-            st.session_state.sls_cases_df = edited_sls
-        
-        # Display number of SLS cases
-        parent.caption(f"✓ {len(edited_sls)} SLS load case(s) defined")
-        
-        # Show validation warnings
-        if len(edited_uls) == 0:
-            parent.warning("⚠️ No ULS cases defined. Add at least one case.")
-        if len(edited_sls) == 0:
-            parent.warning("⚠️ No SLS cases defined. Add at least one case.")
+    # ========== ULS LOAD CASES ==========
+    parent.markdown("#### Ultimate Limit State (ULS) Load Cases")
     
-    # Update LoadCaseSet from edited dataframes (outside expander)
+    edited_uls = parent.data_editor(
+        st.session_state.uls_cases_df,
+        num_rows="dynamic",
+        width="stretch",
+        key=f"{key_prefix}_uls_editor",
+        column_config={
+            "Load Case": st.column_config.TextColumn(
+                "Load Case",
+                help="Description of load case (e.g., '1.5W + 0.75L')",
+                width="medium"
+            ),
+            "Wind Factor": st.column_config.NumberColumn(
+                "Wind Factor (γW)",
+                help="Partial factor applied to wind load",
+                min_value=0.0,
+                max_value=10.0,
+                step=0.05,
+                format="%.2f",
+                width="small"
+            ),
+            "Barrier Factor": st.column_config.NumberColumn(
+                "Barrier Factor (γL)",
+                help="Partial factor applied to barrier load",
+                min_value=0.0,
+                max_value=10.0,
+                step=0.05,
+                format="%.2f",
+                width="small"
+            )
+        },
+        hide_index=True
+    )
+    
+    st.session_state.uls_cases_df = edited_uls
+    
+    # Display number of ULS cases
+    parent.caption(f"{len(edited_uls)} ULS load case(s) defined")
+    
+    parent.markdown("---")
+    
+    # ========== SLS LOAD CASES ==========
+    parent.markdown("#### Serviceability Limit State (SLS) Load Cases")
+    
+    edited_sls = parent.data_editor(
+        st.session_state.sls_cases_df,
+        num_rows="dynamic",
+        width="stretch",
+        key=f"{key_prefix}_sls_editor",
+        column_config={
+            "Load Case": st.column_config.TextColumn(
+                "Load Case",
+                help="Description of load case (e.g., 'W' or 'L')",
+                width="medium"
+            ),
+            "Wind Factor": st.column_config.NumberColumn(
+                "Wind Factor (γW)",
+                help="Partial factor applied to wind load",
+                min_value=0.0,
+                max_value=5.0,
+                step=0.05,
+                format="%.2f",
+                width="small"
+            ),
+            "Barrier Factor": st.column_config.NumberColumn(
+                "Barrier Factor (γL)",
+                help="Partial factor applied to barrier load",
+                min_value=0.0,
+                max_value=5.0,
+                step=0.05,
+                format="%.2f",
+                width="small"
+            )
+        },
+        hide_index=True
+    )
+    
+    st.session_state.sls_cases_df = edited_sls
+    
+    # Display number of SLS cases
+    parent.caption(f"{len(edited_sls)} SLS load case(s) defined")
+    
+    # Update LoadCaseSet from edited dataframes
     load_case_set = LoadCaseSet()
     load_case_set.update_from_dataframes(edited_uls, edited_sls)
     st.session_state.load_case_set = load_case_set
-    
-    # Show summary outside expander for quick reference
-    parent.markdown(f"**Current Load Cases**: {len(edited_uls)} ULS, {len(edited_sls)} SLS")
     
     return load_case_set
