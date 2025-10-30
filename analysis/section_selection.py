@@ -628,7 +628,7 @@ def section_selection_ui(
         geometry_info = {'span_mm': 0, 'bay_width_mm': 0}
     
     # Section header
-    parent.markdown("### 📊 Section Selection")
+    parent.markdown("### Section Selection")
     parent.markdown("---")
     
     # Load section database
@@ -642,7 +642,7 @@ def section_selection_ui(
     all_suppliers = sorted(df_all['Supplier'].unique())
     
     # Filters in sidebar or expander
-    parent.markdown("#### 🔍 Filters")
+    parent.markdown("#### Filters")
     
     filter_col1, filter_col2 = parent.columns(2)
     
@@ -686,58 +686,53 @@ def section_selection_ui(
     parent.markdown("---")
     
     # Generate plots
-    parent.markdown("#### 📈 Design Plots")
+    parent.markdown("#### Design Plots")
     
-    col1, col2, col3 = parent.columns([1, 1, 1.2])
+    parent.markdown("##### ULS: Section Modulus")
+    uls_fig = generate_uls_plot(
+        df_filtered,
+        Z_req_cm3,
+        material,
+        uls_case_name,
+        geometry_info
+    )
+    parent.plotly_chart(uls_fig, use_container_width=True)
+
+    parent.markdown("##### SLS: Moment of Inertia")
+    sls_fig = generate_sls_plot(
+        df_filtered,
+        I_req_cm4,
+        defl_limit_mm,
+        material,
+        sls_case_name,
+        geometry_info
+    )
+    parent.plotly_chart(sls_fig, use_container_width=True)
+
+    parent.markdown("##### 3D Utilisation")
     
-    with col1:
-        parent.markdown("##### ULS: Section Modulus")
-        uls_fig = generate_uls_plot(
-            df_filtered,
-            Z_req_cm3,
-            material,
-            uls_case_name,
-            geometry_info
-        )
-        parent.plotly_chart(uls_fig, use_container_width=True)
+    view_option = parent.selectbox(
+        "View",
+        options=[
+            "Isometric: Overview",
+            "XY Plane: Utilisation",
+            "XZ Plane: Section Depth"
+        ],
+        key="util_view_selector"
+    )
     
-    with col2:
-        parent.markdown("##### SLS: Moment of Inertia")
-        sls_fig = generate_sls_plot(
-            df_filtered,
-            I_req_cm4,
-            defl_limit_mm,
-            material,
-            sls_case_name,
-            geometry_info
-        )
-        parent.plotly_chart(sls_fig, use_container_width=True)
-    
-    with col3:
-        parent.markdown("##### 3D Utilisation")
-        
-        view_option = parent.selectbox(
-            "View",
-            options=[
-                "Isometric: Overview",
-                "XY Plane: Utilisation",
-                "XZ Plane: Section Depth"
-            ],
-            key="util_view_selector"
-        )
-        
-        util_fig, recommended = generate_utilisation_plot(
-            df_filtered,
-            Z_req_cm3,
-            I_req_cm4,
-            view_option
-        )
-        parent.plotly_chart(util_fig, use_container_width=True)
+    util_fig, recommended = generate_utilisation_plot(
+        df_filtered,
+        Z_req_cm3,
+        I_req_cm4,
+        view_option
+    )
+    parent.plotly_chart(util_fig, use_container_width=True)
     
     parent.markdown("---")
     
     # Section table
-    parent.markdown("#### 📋 Section Database")
+    parent.markdown("#### Section Database")
     
     df_display, styled_df = generate_section_table(
         df_filtered,
@@ -754,7 +749,7 @@ def section_selection_ui(
     
     # Summary statistics
     parent.markdown("---")
-    parent.markdown("#### 📊 Summary")
+    parent.markdown("#### Summary")
     
     n_pass = len(df_display[df_display['ULS Util.'].str.rstrip('%').astype(float) <= 100])
     n_fail = len(df_display) - n_pass
