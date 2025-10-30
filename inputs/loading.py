@@ -64,37 +64,40 @@ class LoadingInputs:
             return 0.0
         return self.wind_pressure_kpa * self.bay_width_mm * 1e-3
     
-    def barrier_load_n_per_mm(self) -> float:
+    def barrier_load_n(self) -> float:
         """
-        Convert barrier load to N/mm
-        
-        Barrier load (kN/m) = N/mm (no conversion needed)
+        Convert barrier load (kN/m) to TOTAL force in N acting on this bay.
+        total_N = barrier_kn_per_m * bay_width_mm
         """
         if not self.include_barrier:
             return 0.0
-        return self.barrier_load_kn_per_m
-    
+        return self.barrier_load_kn_per_m * self.bay_width_mm
+
     def to_loads(self) -> List[Load]:
-        """Convert input values to Load objects"""
+        """
+        Convert input values to Load objects:
+          - Wind -> uniform (N/mm)
+          - Barrier -> point (total N)
+        """
         loads = []
-        
+
         if self.include_wind:
             loads.append(Load(
                 kind=LoadKind.WIND,
                 magnitude=self.wind_load_n_per_mm(),
                 distribution="uniform"
             ))
-        
+
         if self.include_barrier:
+            total_barrier_N = self.barrier_load_n()
             loads.append(Load(
                 kind=LoadKind.BARRIER,
-                magnitude=self.barrier_load_n_per_mm(),
-                distribution="uniform",
+                magnitude=total_barrier_N,
+                distribution="point",
                 height_mm=self.barrier_height_mm
             ))
-        
-        return loads
 
+        return loads
 
 def loading_ui(container=None, key_prefix: str = "load",
                bay_width_mm: float = 3000.0) -> LoadingInputs:
@@ -217,7 +220,7 @@ def loading_ui(container=None, key_prefix: str = "load",
     with sum_col2:
         parent.metric(
             "Barrier Load",
-            f"{loading_inputs.barrier_load_n_per_mm():.2f} N/mm" if include_barrier else "Not included",
+            f"{loading_inputs.barrier_load_n():.2f} N" if include_barrier else "Not included",
             help="Line load from barrier/balustrade"
         )
     
