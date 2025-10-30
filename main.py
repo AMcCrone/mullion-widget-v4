@@ -8,7 +8,7 @@ from analysis.beam_analysis import analyze_uls_cases, analyze_sls_deflection_req
 import plotly.graph_objects as go
 import numpy as np
 
-st.set_page_config(page_title="Mullion Sizing")
+st.set_page_config(page_title="TT Mullion Sizing App")
 st.title("Mullion Sizing App")
 
 # Layout example: put geometry and material side-by-side, loads on a second row
