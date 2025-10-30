@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import numpy as np
 
 st.set_page_config(page_title="TT Mullion Sizing App")
-st.title("Mullion Sizing App")
+st.title("TT Mullion Sizing App")
 
 # Layout example: put geometry and material side-by-side, loads on a second row
 st.header("Geometry")
