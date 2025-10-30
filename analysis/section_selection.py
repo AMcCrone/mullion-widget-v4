@@ -708,25 +708,25 @@ def section_selection_ui(
     )
     parent.plotly_chart(sls_fig, width='stretch')
 
-    parent.markdown("##### 3D Utilisation")
+    # parent.markdown("##### 3D Utilisation")
     
-    view_option = parent.selectbox(
-        "View",
-        options=[
-            "Isometric: Overview",
-            "XY Plane: Utilisation",
-            "XZ Plane: Section Depth"
-        ],
-        key="util_view_selector"
-    )
+    # view_option = parent.selectbox(
+    #     "View",
+    #     options=[
+    #         "Isometric: Overview",
+    #         "XY Plane: Utilisation",
+    #         "XZ Plane: Section Depth"
+    #     ],
+    #     key="util_view_selector"
+    # )
     
-    util_fig, recommended = generate_utilisation_plot(
-        df_filtered,
-        Z_req_cm3,
-        I_req_cm4,
-        view_option
-    )
-    parent.plotly_chart(util_fig, width='stretch')
+    # util_fig, recommended = generate_utilisation_plot(
+    #     df_filtered,
+    #     Z_req_cm3,
+    #     I_req_cm4,
+    #     view_option
+    # )
+    # parent.plotly_chart(util_fig, width='stretch')
     
     parent.markdown("---")
     
