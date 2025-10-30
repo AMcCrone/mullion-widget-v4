@@ -144,6 +144,6 @@ def material_ui(container=None, key_prefix: str = "mat",
     st.session_state.inputs[f"{key_prefix}_type"] = mtype
     st.session_state.inputs[f"{key_prefix}_grade"] = selected_grade
 
-        parent.write(f"Elastic Modulus, E: {mat.E:.3e} Pa, Yield Stress, fy: {mat.fy:.3e} Pa, Density: {mat.density:.1f} kg/m³")
+    parent.write(f"Elastic Modulus, E: {mat.E:.3e} Pa, Yield Stress, fy: {mat.fy:.3e} Pa, Density: {mat.density:.1f} kg/m³")
 
     return mat
