@@ -84,8 +84,7 @@ with col2:
             format="%.2f",
             help="Custom deflection limit"
         )
-    
-    st.caption(f"≈ L/{L/deflection_limit_mm:.0f}")
+        st.caption(f"≈ L/{L/deflection_limit_mm:.0f}")
 
 # Row 2: Material Safety Factor
 st.subheader("Material Safety Factor")
