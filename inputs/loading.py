@@ -220,8 +220,8 @@ def loading_ui(container=None, key_prefix: str = "load",
     with sum_col2:
         parent.metric(
             "Barrier Load",
-            f"{loading_inputs.barrier_load_n():.2f} N" if include_barrier else "Not included",
-            help="Line load from barrier/balustrade"
+            f"{loading_inputs.barrier_load_n():.0f} N" if include_barrier else "Not included",
+            help="Equivalent point load from barrier"
         )
     
     with sum_col3:
@@ -229,7 +229,7 @@ def loading_ui(container=None, key_prefix: str = "load",
             parent.metric(
                 "Barrier Height",
                 f"{barrier_height_mm:.0f} mm",
-                help="Height of barrier load application"
+                help="Height above base of barrier load"
             )
         else:
             parent.metric("Barrier Height", "N/A")
