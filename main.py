@@ -115,27 +115,40 @@ with col2:
 st.markdown("---")
 
 # ========== CACHED ANALYSIS FUNCTIONS ==========
-
 @st.cache_data(show_spinner=False)
-def cached_uls_analysis(_geom, _loading_inputs, _load_case_set):
-    """Cached ULS analysis - underscore prefix prevents hashing of mutable objects"""
+def cached_uls_analysis(
+    span_mm: float,
+    bay_width_mm: float,
+    loading_inputs_hash: str,
+    load_cases_hash: str,
+    _geom,
+    _loading_inputs,
+    _load_case_set
+):
+    """
+    Cached ULS analysis with hashable parameters.
+    Uses simple values for cache key, passes objects for computation.
+    """
     return analyze_uls_cases(_geom, _loading_inputs, _load_case_set)
 
 @st.cache_data(show_spinner=False)
-def cached_sls_analysis(_geom, _loading_inputs, _load_case_set, E, deflection_limit_mm):
-    """Cached SLS analysis"""
+def cached_sls_analysis(
+    span_mm: float,
+    bay_width_mm: float,
+    loading_inputs_hash: str,
+    load_cases_hash: str,
+    E: float,
+    deflection_limit_mm: float,
+    _geom,
+    _loading_inputs,
+    _load_case_set
+):
+    """
+    Cached SLS analysis with hashable parameters.
+    Uses simple values for cache key, passes objects for computation.
+    """
     return analyze_sls_deflection_requirement(
         _geom, _loading_inputs, _load_case_set, E, deflection_limit_mm
-    )
-
-# ========== ANALYSIS ==========
-st.header("Results")
-
-# Run analyses
-with st.spinner("⏳ Analyzing load cases..."):
-    uls_results = analyze_uls_cases(geom, loading_inputs, load_case_set)
-    sls_results = analyze_sls_deflection_requirement(
-        geom, loading_inputs, load_case_set, mat.E, deflection_limit_mm
     )
 
 # ========== ANALYSIS ==========
