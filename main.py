@@ -34,3 +34,10 @@ st.markdown("---")
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
 st.markdown("---")
+
+st.header("Results")
+results = analyze_loadcase(span_mm=geom.span_mm,loads=load_case.loads,E=mat.E,I=section.I)
+# Use results for plotting and checks
+st.line_chart({"V(x)": results['V_N']})
+st.metric("Max Moment", f"{results['M_max_Nm']:.2f} N·m")
+st.metric("Max Deflection", f"{results['v_max_m']*1000:.2f} mm")
