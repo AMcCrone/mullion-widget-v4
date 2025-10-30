@@ -49,38 +49,23 @@ def compute_wind_barrier_uniform_and_point(
     """
     Compute reactions, shear force V(x), and bending moment M(x) for a simply-supported
     beam under arbitrary uniform and point loads.
-    
-    Parameters:
-    -----------
-    span_mm : float
-        Span length in millimeters
-    loads : List[Load]
-        List of Load objects with attributes:
-        - distribution: 'uniform' or 'point'
-        - magnitude: float (N/mm for uniform, N for point)
-        - height_mm: Optional[float] (not used in analysis, for visualization only)
-    n_points : int
-        Number of points for discretization (default 501)
-    
-    Returns:
-    --------
-    dict with keys:
-        - 'x_m': np.ndarray, position array in metres
-        - 'V': np.ndarray, shear force in N
-        - 'M': np.ndarray, bending moment in N·m
-        - 'RA': float, left reaction in N
-        - 'RB': float, right reaction in N
+
+    Notes:
+    - Uniform loads in `loads` are expected as N/mm (converted to N/m internally).
+    - Point loads are expected in N; their along-beam position is taken from
+      `load.height_mm` (interpreted as mm from the left/support baseline). If absent,
+      mid-span is used. Positions outside [0, L] are clamped.
     """
     # Convert span to metres
     L = span_mm / 1000.0  # m
-    
+
     # Create position array
     x_m = np.linspace(0, L, n_points)
-    
-    # Separate loads into uniform and point
+
+    # Separate loads into uniform and point (with positions)
     uniform_loads = []
-    point_loads = []
-    
+    point_loads = []  # list of tuples (P_N, a_m)
+
     for load in loads:
         if load.distribution == 'uniform':
             # Convert N/mm to N/m
@@ -89,50 +74,63 @@ def compute_wind_barrier_uniform_and_point(
         elif load.distribution == 'point':
             # Point load already in N
             P_N = load.magnitude
-            # Assume point loads are applied at midspan unless specified
-            a_m = L / 2.0
+
+            # Prefer explicit height_mm if present on the load (interpreted as mm -> m)
+            height_mm = getattr(load, "height_mm", None)
+
+            if height_mm is None:
+                # fallback: mid-span (previous behaviour)
+                a_m = L / 2.0
+            else:
+                a_m = float(height_mm) / 1000.0  # convert mm -> m
+                # clamp to beam
+                if a_m < 0.0:
+                    a_m = 0.0
+                elif a_m > L:
+                    a_m = L
+
             point_loads.append((P_N, a_m))
-    
+
     # Compute reactions using equilibrium
     W_total = sum(w * L for w in uniform_loads)
     P_total = sum(P for P, a in point_loads)
     total_load = W_total + P_total
-    
+
     # Moment equilibrium about left support to find RB
     moment_uniform = sum(w * L * (L / 2.0) for w in uniform_loads)
     moment_point = sum(P * a for P, a in point_loads)
     total_moment = moment_uniform + moment_point
-    
+
     # Solve for reactions
     if L > 0:
         RB = total_moment / L
         RA = total_load - RB
     else:
         RA = RB = 0.0
-    
+
     # Compute shear force V(x)
     V = np.zeros_like(x_m)
-    
+
     for i, x in enumerate(x_m):
         V[i] = RA
-        
+
         # Subtract contribution from uniform loads
         for w in uniform_loads:
             V[i] -= w * x
-        
+
         # Subtract point loads that have been passed
         for P, a in point_loads:
             if x >= a:
                 V[i] -= P
-    
+
     # Compute bending moment M(x) by integrating V(x)
     dx = x_m[1] - x_m[0]
     M = np.zeros_like(x_m)
     M[0] = 0.0
-    
+
     for i in range(1, len(x_m)):
         M[i] = M[i-1] + (V[i-1] + V[i]) * dx / 2.0
-    
+
     return {
         'x_m': x_m,
         'V': V,
