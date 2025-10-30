@@ -695,7 +695,7 @@ def section_selection_ui(
         uls_case_name,
         geometry_info
     )
-    parent.plotly_chart(uls_fig, use_container_width=True)
+    parent.plotly_chart(uls_fig, width='stretch')
 
     parent.markdown("##### SLS: Moment of Inertia")
     sls_fig = generate_sls_plot(
@@ -706,7 +706,7 @@ def section_selection_ui(
         sls_case_name,
         geometry_info
     )
-    parent.plotly_chart(sls_fig, use_container_width=True)
+    parent.plotly_chart(sls_fig, width='stretch')
 
     parent.markdown("##### 3D Utilisation")
     
@@ -726,7 +726,7 @@ def section_selection_ui(
         I_req_cm4,
         view_option
     )
-    parent.plotly_chart(util_fig, use_container_width=True)
+    parent.plotly_chart(util_fig, width='stretch')
     
     parent.markdown("---")
     
@@ -742,7 +742,7 @@ def section_selection_ui(
     # Display styled dataframe
     parent.dataframe(
         styled_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True
     )
     
