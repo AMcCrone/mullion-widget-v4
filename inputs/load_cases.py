@@ -219,7 +219,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
                 "Wind Factor (γW)",
                 help="Partial factor applied to wind load",
                 min_value=0.0,
-                max_value=2.0,
+                max_value=10.0,
                 step=0.05,
                 format="%.2f",
                 width="small"
@@ -228,7 +228,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
                 "Barrier Factor (γL)",
                 help="Partial factor applied to barrier load",
                 min_value=0.0,
-                max_value=2.0,
+                max_value=10.0,
                 step=0.05,
                 format="%.2f",
                 width="small"
@@ -240,7 +240,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     st.session_state.uls_cases_df = edited_uls
     
     # Display number of ULS cases
-    parent.caption(f"📋 {len(edited_uls)} ULS load case(s) defined")
+    parent.caption(f"{len(edited_uls)} ULS load case(s) defined")
     
     parent.markdown("---")
     
@@ -262,7 +262,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
                 "Wind Factor (γW)",
                 help="Partial factor applied to wind load",
                 min_value=0.0,
-                max_value=1.5,
+                max_value=5.0,
                 step=0.05,
                 format="%.2f",
                 width="small"
@@ -271,7 +271,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
                 "Barrier Factor (γL)",
                 help="Partial factor applied to barrier load",
                 min_value=0.0,
-                max_value=1.5,
+                max_value=5.0,
                 step=0.05,
                 format="%.2f",
                 width="small"
@@ -283,7 +283,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
     st.session_state.sls_cases_df = edited_sls
     
     # Display number of SLS cases
-    parent.caption(f"📋 {len(edited_sls)} SLS load case(s) defined")
+    parent.caption(f"{len(edited_sls)} SLS load case(s) defined")
     
     # Update LoadCaseSet from edited dataframes
     load_case_set = LoadCaseSet()
