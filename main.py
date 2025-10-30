@@ -26,10 +26,9 @@ loading_inputs = loading_ui(container=st, key_prefix="main_load", bay_width_mm=b
 
 # Display diagram using the same loading_inputs
 loading_diagram_ui(container=st,key_prefix="main_load",span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
-st.markdown("---")
-
 # Display diagram using the same loading_inputs
 beam_model_diagram_ui(span_mm=span_mm,loading_inputs=loading_inputs)
+st.markdown("---")
 
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
