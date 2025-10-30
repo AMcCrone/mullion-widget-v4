@@ -216,7 +216,11 @@ def generate_uls_plot(
     )
     
     fig.update_layout(
-        title=title_text,
+        title={
+            'text': title_text,
+            'x': 0.5,
+            'xanchor': 'center'
+        }
         xaxis_title="Section Depth (mm)",
         yaxis_title="Section Modulus (cm³)",
         xaxis=dict(range=[x_min, x_max]),
