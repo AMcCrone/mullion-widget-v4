@@ -61,16 +61,20 @@ with col2:
         # Calculate CWCT deflection limit
         if L <= 3000:
             deflection_limit_mm = L / 200
+            cwct_formula = "L/200"
         elif L < 7500:
             deflection_limit_mm = 5 + L / 300
+            cwct_formula = "5 + L/300"
         else:
             deflection_limit_mm = L / 250
+            cwct_formula = "L/250"
         
         st.metric(
             "Deflection Limit",
             f"{deflection_limit_mm:.2f} mm",
             help="Calculated per CWCT standards"
         )
+        st.caption(f"CWCT: {cwct_formula} → ≈ L/{L/deflection_limit_mm:.0f}")
     else:
         # Custom deflection limit
         deflection_limit_mm = st.number_input(
@@ -82,8 +86,6 @@ with col2:
         )
     
     st.caption(f"≈ L/{L/deflection_limit_mm:.0f}")
-
-st.markdown("---")
 
 # Row 2: Material Safety Factor
 st.subheader("Material Safety Factor")
