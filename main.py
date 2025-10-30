@@ -75,6 +75,20 @@ with col3:
 
 st.markdown("---")
 
+# ========== CACHED ANALYSIS FUNCTIONS ==========
+
+@st.cache_data(show_spinner=False)
+def cached_uls_analysis(_geom, _loading_inputs, _load_case_set):
+    """Cached ULS analysis - underscore prefix prevents hashing of mutable objects"""
+    return analyze_uls_cases(_geom, _loading_inputs, _load_case_set)
+
+@st.cache_data(show_spinner=False)
+def cached_sls_analysis(_geom, _loading_inputs, _load_case_set, E, deflection_limit_mm):
+    """Cached SLS analysis"""
+    return analyze_sls_deflection_requirement(
+        _geom, _loading_inputs, _load_case_set, E, deflection_limit_mm
+    )
+
 # ========== ANALYSIS ==========
 st.header("Results")
 
@@ -82,6 +96,15 @@ st.header("Results")
 with st.spinner("⏳ Analyzing load cases..."):
     uls_results = analyze_uls_cases(geom, loading_inputs, load_case_set)
     sls_results = analyze_sls_deflection_requirement(
+        geom, loading_inputs, load_case_set, mat.E, deflection_limit_mm
+    )
+
+# ========== ANALYSIS ==========
+st.header("Results")
+
+with st.spinner("⏳ Analyzing load cases..."):
+    uls_results = cached_uls_analysis(geom, loading_inputs, load_case_set)
+    sls_results = cached_sls_analysis(
         geom, loading_inputs, load_case_set, mat.E, deflection_limit_mm
     )
 
@@ -313,10 +336,12 @@ with col2:
 st.header("Section Selection")
 
 # Call the section selection UI
-section_selection_ui(container=st,geometry_info={'span_mm': geom.span_mm,'bay_width_mm': geom.bay_width_mm},
+section_selection_ui(
+    container=st,
+    geometry_info={'span_mm': geom.span_mm, 'bay_width_mm': geom.bay_width_mm},
     material=mat.material_type.value,  # "Aluminium" or "Steel"
-    Z_req_cm3=compute_required_section_modulus(gov_M_val, sigma_allow_Pa)*1e6,
-    I_req_m4 = sls_results['governing']['I_req_m4'],
+    Z_req_cm3=Z_req * 1e6,  # Convert m³ to cm³
+    I_req_cm4=I_req * 1e8,  # Convert m⁴ to cm⁴ (FIXED!)
     defl_limit_mm=sls_results['governing']['v_limit_mm'],
     uls_case_name=gov_M_case,
     sls_case_name=sls_results['governing'].get('case', ''),
