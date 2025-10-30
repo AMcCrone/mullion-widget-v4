@@ -3,6 +3,7 @@ from inputs.geometry import geometry_ui
 from inputs.material import material_ui, MaterialType
 from inputs.loading import loading_ui, loading_diagram_ui, beam_model_diagram_ui
 from inputs.load_cases import load_cases_ui
+from analysis.beam_analysis import analyze_loadcase
 
 st.set_page_config(page_title="Mullion Sizing")
 st.title("Mullion Sizing App")
