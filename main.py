@@ -29,7 +29,7 @@ loading_diagram_ui(container=st,key_prefix="main_load",span_mm=span_mm,bay_width
 st.markdown("---")
 
 # Display diagram using the same loading_inputs
-beam_model_diagram_ui(span_mm=mullion_length_mm,loading_inputs=loading_inputs)
+beam_model_diagram_ui(span_mm=span_mm,loading_inputs=loading_inputs)
 
 st.header("Load Cases")
 load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
