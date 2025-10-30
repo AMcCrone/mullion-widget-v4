@@ -74,7 +74,7 @@ with col2:
             f"{deflection_limit_mm:.2f} mm",
             help="Calculated per CWCT standards"
         )
-        st.caption(f"CWCT: {cwct_formula} → ≈ L/{L/deflection_limit_mm:.0f}")
+        st.caption(f"CWCT: {cwct_formula}")
     else:
         # Custom deflection limit
         deflection_limit_mm = st.number_input(
