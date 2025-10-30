@@ -292,33 +292,33 @@ st.markdown("---")
 # ========================================
 # FINAL DESIGN SUMMARY
 # ========================================
-st.header("Design Summary")
+# st.header("Design Summary")
 
-st.markdown("""
-Select a section with properties that meet or exceed the following requirements:
-""")
+# st.markdown("""
+# Select a section with properties that meet or exceed the following requirements:
+# """)
 
-col1, col2 = st.columns(2)
+# col1, col2 = st.columns(2)
 
-with col1:
-    st.markdown("### Strength (ULS)")
-    st.metric("Minimum Z required", f"{Z_req*1e6:.2f} cm³")
-    st.caption(f"Based on {gov_M_case}")
+# with col1:
+#     st.markdown("### Strength (ULS)")
+#     st.metric("Minimum Z required", f"{Z_req*1e6:.2f} cm³")
+#     st.caption(f"Based on {gov_M_case}")
 
-with col2:
-    st.markdown("### Stiffness (SLS)")
-    st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
-    st.caption(f"Based on {gov_sls_case}")
+# with col2:
+#     st.markdown("### Stiffness (SLS)")
+#     st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
+#     st.caption(f"Based on {gov_sls_case}")
 
-st.header("Section Selection")
+# st.header("Section Selection")
 
-# Call the section selection UI
-section_selection_ui(container=st,geometry_info={'span_mm': geom.span_mm,'bay_width_mm': geom.bay_width_mm},
-    material=mat.material_type.value,  # "Aluminium" or "Steel"
-    Z_req_cm3=compute_required_section_modulus(gov_M_val, sigma_allow_Pa)*1e6,
-    I_req_m4 = sls_results['governing']['I_req_m4'],
-    defl_limit_mm=sls_results['governing']['v_limit_mm'],
-    uls_case_name=gov_M_case,
-    sls_case_name=sls_results['governing'].get('case', ''),
-    excel_path="data/mullion_profile_db.xlsx"
-)
+# # Call the section selection UI
+# section_selection_ui(container=st,geometry_info={'span_mm': geom.span_mm,'bay_width_mm': geom.bay_width_mm},
+#     material=mat.material_type.value,  # "Aluminium" or "Steel"
+#     Z_req_cm3=compute_required_section_modulus(gov_M_val, sigma_allow_Pa)*1e6,
+#     I_req_m4 = sls_results['governing']['I_req_m4'],
+#     defl_limit_mm=sls_results['governing']['v_limit_mm'],
+#     uls_case_name=gov_M_case,
+#     sls_case_name=sls_results['governing'].get('case', ''),
+#     excel_path="data/mullion_profile_db.xlsx"
+# )
