@@ -677,3 +677,309 @@ class LoadCase:
             if ld.distribution == "point":
                 total += ld.magnitude
         return total
+
+
+def beam_model_diagram_ui(container=None, key_prefix: str = "load",
+                          span_mm: float = 4000.0,
+                          loading_inputs: Optional[LoadingInputs] = None):
+    """
+    Render 2D beam model diagram showing converted loading for analysis.
+    
+    This shows the simplified structural model:
+    - Simply supported beam
+    - Uniform distributed load from wind (N/mm)
+    - Point load from barrier (N)
+    
+    Parameters
+    ----------
+    container : streamlit container, optional
+        Container to render UI in (if None, uses st directly)
+    key_prefix : str
+        Prefix for session state keys
+    span_mm : float
+        Mullion span/length in mm
+    loading_inputs : LoadingInputs, optional
+        Loading configuration (if None, reads from session state)
+    """
+    try:
+        import streamlit as st
+        import plotly.graph_objects as go
+        import numpy as np
+    except Exception as e:
+        raise RuntimeError("beam_model_diagram_ui requires streamlit and plotly") from e
+
+    parent = container if container is not None else st
+    
+    # Get loading inputs if not provided
+    if loading_inputs is None:
+        if "inputs" not in st.session_state:
+            return
+        loading_inputs = LoadingInputs(
+            include_wind=st.session_state.inputs.get(f"{key_prefix}_wind_en", True),
+            wind_pressure_kpa=st.session_state.inputs.get(f"{key_prefix}_wind_kpa", 1.0),
+            bay_width_mm=st.session_state.inputs.get("bay_width", 3000.0),
+            include_barrier=st.session_state.inputs.get(f"{key_prefix}_barrier_en", False),
+            barrier_load_kn_per_m=st.session_state.inputs.get(f"{key_prefix}_barrier_knm", 0.74),
+            barrier_height_mm=st.session_state.inputs.get(f"{key_prefix}_barrier_height", 1100.0)
+        )
+    
+    # Scaling for visualization (target width ~12 units)
+    target_width = 12.0
+    scale = target_width / span_mm
+    
+    # Scaled dimensions
+    L = span_mm * scale
+    barrier_pos = loading_inputs.barrier_height_mm * scale if loading_inputs.include_barrier else 0
+    
+    # Proportional dimensions
+    support_width = L * 0.03
+    support_height = L * 0.05
+    wind_arrow_height = L * 0.1
+    barrier_arrow_height = L * 0.2
+    dim_level_one = support_height + 0.5
+    dim_level_two = dim_level_one + 1
+    
+    # Define colors matching TikZ theme
+    TT_mid_blue = 'rgb(0,163,173)'
+    TT_dark_blue = 'rgb(0,48,60)'
+    TT_orange = 'rgb(211,69,29)'
+    TT_grey = 'rgb(128,128,128)'
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # ========== BEAM ==========
+    fig.add_trace(go.Scatter(
+        x=[0, L],
+        y=[0, 0],
+        mode='lines',
+        line=dict(color=TT_dark_blue, width=4),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    # ========== SUPPORTS (Pin supports as triangles) ==========
+    # Left support
+    fig.add_trace(go.Scatter(
+        x=[0, -support_width, support_width, 0],
+        y=[0, -support_height, -support_height, 0],
+        fill='toself',
+        fillcolor=TT_grey,
+        line=dict(color=TT_grey, width=2),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    # Right support
+    fig.add_trace(go.Scatter(
+        x=[L, L-support_width, L+support_width, L],
+        y=[0, -support_height, -support_height, 0],
+        fill='toself',
+        fillcolor=TT_grey,
+        line=dict(color=TT_grey, width=2),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    # ========== DISTRIBUTED WIND LOAD (Blue arrows) ==========
+    if loading_inputs.include_wind:
+        num_arrows = max(10, min(15, int(L / 1.5)))
+        wind_load_n_per_mm = loading_inputs.wind_load_n_per_mm()
+        
+        for i in range(num_arrows):
+            x_pos = i * L / (num_arrows - 1)
+            
+            # Arrow shaft
+            fig.add_trace(go.Scatter(
+                x=[x_pos, x_pos],
+                y=[wind_arrow_height, 0.15],
+                mode='lines',
+                line=dict(color=TT_mid_blue, width=2),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            # Arrow head (triangle)
+            arrow_size = L * 0.015
+            fig.add_trace(go.Scatter(
+                x=[x_pos, x_pos - arrow_size, x_pos + arrow_size, x_pos],
+                y=[0.15, 0.15 + arrow_size*1.5, 0.15 + arrow_size*1.5, 0.15],
+                fill='toself',
+                fillcolor=TT_mid_blue,
+                line=dict(color=TT_mid_blue, width=0),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+    
+    # ========== BARRIER POINT LOAD (Orange arrow) ==========
+    if loading_inputs.include_barrier and barrier_pos > 0:
+        barrier_load_n = loading_inputs.barrier_load_n()
+        
+        # Arrow shaft
+        fig.add_trace(go.Scatter(
+            x=[barrier_pos, barrier_pos],
+            y=[barrier_arrow_height, 0.15],
+            mode='lines',
+            line=dict(color=TT_orange, width=4),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Arrow head
+        arrow_size = L * 0.02
+        fig.add_trace(go.Scatter(
+            x=[barrier_pos, barrier_pos - arrow_size, barrier_pos + arrow_size, barrier_pos],
+            y=[0.15, 0.15 + arrow_size*1.5, 0.15 + arrow_size*1.5, 0.15],
+            fill='toself',
+            fillcolor=TT_orange,
+            line=dict(color=TT_orange, width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+    
+    # ========== ANNOTATIONS ==========
+    annotations = []
+    
+    # Support labels
+    annotations.append(dict(
+        x=0,
+        y=-support_height - 0.2,
+        text="A",
+        showarrow=False,
+        font=dict(size=14, color=TT_dark_blue),
+        xanchor='center'
+    ))
+    
+    annotations.append(dict(
+        x=L,
+        y=-support_height - 0.2,
+        text="B",
+        showarrow=False,
+        font=dict(size=14, color=TT_dark_blue),
+        xanchor='center'
+    ))
+    
+    # Wind load label
+    if loading_inputs.include_wind:
+        wind_load_n_per_mm = loading_inputs.wind_load_n_per_mm()
+        annotations.append(dict(
+            x=L / 2,
+            y=wind_arrow_height + 0.3,
+            text=f"<b>w</b> = {wind_load_n_per_mm:.3f} N/mm",
+            showarrow=False,
+            font=dict(size=13, color=TT_mid_blue),
+            xanchor='center'
+        ))
+    
+    # Barrier load label
+    if loading_inputs.include_barrier:
+        barrier_load_n = loading_inputs.barrier_load_n()
+        annotations.append(dict(
+            x=barrier_pos,
+            y=barrier_arrow_height + 0.3,
+            text=f"<b>F<sub>BL</sub></b> = {barrier_load_n:.0f} N",
+            showarrow=False,
+            font=dict(size=13, color=TT_orange),
+            xanchor='center'
+        ))
+    
+    # Dimension line for barrier height (below beam)
+    if loading_inputs.include_barrier:
+        # Horizontal line
+        fig.add_trace(go.Scatter(
+            x=[0, barrier_pos],
+            y=[-dim_level_one, -dim_level_one],
+            mode='lines',
+            line=dict(color=TT_orange, width=2),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # End caps
+        for x in [0, barrier_pos]:
+            fig.add_trace(go.Scatter(
+                x=[x, x],
+                y=[-dim_level_one - 0.1, -dim_level_one + 0.1],
+                mode='lines',
+                line=dict(color=TT_orange, width=2),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+        
+        annotations.append(dict(
+            x=barrier_pos / 2,
+            y=-dim_level_one - 0.3,
+            text=f"{loading_inputs.barrier_height_mm:.0f} mm",
+            showarrow=False,
+            font=dict(size=12, color=TT_orange),
+            xanchor='center'
+        ))
+    
+    # Dimension line for total length
+    # Horizontal line
+    fig.add_trace(go.Scatter(
+        x=[0, L],
+        y=[-dim_level_two, -dim_level_two],
+        mode='lines',
+        line=dict(color=TT_grey, width=2),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    # End caps
+    for x in [0, L]:
+        fig.add_trace(go.Scatter(
+            x=[x, x],
+            y=[-dim_level_two - 0.1, -dim_level_two + 0.1],
+            mode='lines',
+            line=dict(color=TT_grey, width=2),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+    
+    annotations.append(dict(
+        x=L / 2,
+        y=-dim_level_two - 0.3,
+        text=f"<b>L</b> = {span_mm:.0f} mm",
+        showarrow=False,
+        font=dict(size=12, color=TT_grey),
+        xanchor='center'
+    ))
+    
+    # Update layout
+    y_min = -dim_level_two - 0.8
+    y_max = max(wind_arrow_height, barrier_arrow_height) + 0.8
+    
+    fig.update_layout(
+        xaxis=dict(
+            visible=False,
+            range=[-support_width * 2, L + support_width * 2]
+        ),
+        yaxis=dict(
+            visible=False,
+            scaleanchor="x",
+            scaleratio=1,
+            range=[y_min, y_max]
+        ),
+        annotations=annotations,
+        showlegend=False,
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=400,
+        paper_bgcolor='white',
+        plot_bgcolor='white'
+    )
+    
+    parent.plotly_chart(fig, use_container_width=True)
+    
+    # Caption
+    caption_parts = []
+    if loading_inputs.include_wind:
+        wind_load_n_per_mm = loading_inputs.wind_load_n_per_mm()
+        caption_parts.append(f"equivalent UDL from wind pressure <i>w</i> = {wind_load_n_per_mm:.3f} N/mm")
+    if loading_inputs.include_barrier:
+        barrier_load_n = loading_inputs.barrier_load_n()
+        caption_parts.append(f"equivalent barrier point load <i>F<sub>BL</sub></i> = {barrier_load_n:.0f} N at {loading_inputs.barrier_height_mm:.0f} mm")
+    
+    if caption_parts:
+        caption = f"**Figure:** Mullion beam model showing {' and '.join(caption_parts)}."
+        parent.markdown(caption, unsafe_allow_html=True)
