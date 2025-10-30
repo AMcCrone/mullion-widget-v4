@@ -600,10 +600,6 @@ def section_selection_ui(
     if geometry_info is None:
         geometry_info = {'span_mm': 0, 'bay_width_mm': 0}
     
-    # Section header
-    parent.markdown("### Section Selection")
-    parent.markdown("---")
-    
     # CACHED DATABASE LOADING - Only reads once per material+path combination
     @st.cache_data(show_spinner="Loading section database...")
     def cached_load_database(material: str, excel_path: str) -> pd.DataFrame:
