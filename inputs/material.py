@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional
 
+
 class MaterialType(str, Enum):
     STEEL = "Steel"
     ALUMINIUM = "Aluminium"
@@ -10,15 +11,29 @@ class MaterialType(str, Enum):
 
 _DEFAULT_MATERIAL_LIBRARY: Dict[MaterialType, Dict[str, Dict]] = {
     MaterialType.STEEL: {
+        # Common EN structural steels
+        "S235": {"E": 210e9, "density": 7850.0, "fy": 235e6},
         "S275": {"E": 210e9, "density": 7850.0, "fy": 275e6},
         "S355": {"E": 210e9, "density": 7850.0, "fy": 355e6},
+        "S420": {"E": 210e9, "density": 7850.0, "fy": 420e6},
+        "S460": {"E": 210e9, "density": 7850.0, "fy": 460e6},
+
+        # Stainless steels used in façades / fittings (note: yield depends on condition)
+        "SS304 (A2)": {"E": 193e9, "density": 8000.0, "fy": 215e6},
+        "SS316 (A4)": {"E": 193e9, "density": 8000.0, "fy": 240e6},
     },
     MaterialType.ALUMINIUM: {
+        # Common architectural extrusions and structural alloys
+        "6063-T5": {"E": 69e9, "density": 2700.0, "fy": 125e6},
         "6063-T6": {"E": 69e9, "density": 2700.0, "fy": 155e6},
+        "6061-T6": {"E": 69e9, "density": 2700.0, "fy": 240e6},
+        "6005A-T6": {"E": 69e9, "density": 2700.0, "fy": 215e6},
         "6082-T6": {"E": 69e9, "density": 2700.0, "fy": 260e6},
+
+        # Higher-strength aluminium (less common for typical mullions but available)
+        "7075-T6": {"E": 71.7e9, "density": 2810.0, "fy": 505e6},
     },
 }
-
 
 @dataclass
 class Material:
