@@ -154,10 +154,30 @@ def cached_sls_analysis(
 # ========== ANALYSIS ==========
 st.header("Results")
 
+# Create hash strings for caching - these change when the objects change
+loading_inputs_hash = f"{loading_inputs.wind_pressure_Pa}_{loading_inputs.barrier_line_load_N_per_m}"
+load_cases_hash = f"{len(load_case_set.uls_cases)}_{len(load_case_set.sls_cases)}"
+
 with st.spinner("⏳ Analyzing load cases..."):
-    uls_results = cached_uls_analysis(geom, loading_inputs, load_case_set)
+    uls_results = cached_uls_analysis(
+        geom.span_mm,
+        geom.bay_width_mm,
+        loading_inputs_hash,
+        load_cases_hash,
+        geom,
+        loading_inputs,
+        load_case_set
+    )
     sls_results = cached_sls_analysis(
-        geom, loading_inputs, load_case_set, mat.E, deflection_limit_mm
+        geom.span_mm,
+        geom.bay_width_mm,
+        loading_inputs_hash,
+        load_cases_hash,
+        mat.E,
+        deflection_limit_mm,
+        geom,
+        loading_inputs,
+        load_case_set
     )
 
 # ========================================
