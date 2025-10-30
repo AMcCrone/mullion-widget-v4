@@ -754,6 +754,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
         y=[0, 0],
         mode='lines',
         line=dict(color=TT_dark_blue, width=4),
+        marker=dict(size=0),
         showlegend=False,
         hoverinfo='skip'
     ))
@@ -795,6 +796,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
                 y=[wind_arrow_height, 0.15],
                 mode='lines',
                 line=dict(color=TT_mid_blue, width=2),
+                marker=dict(size=0),
                 showlegend=False,
                 hoverinfo='skip'
             ))
@@ -821,6 +823,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
             y=[barrier_arrow_height, 0.15],
             mode='lines',
             line=dict(color=TT_orange, width=4),
+            marker=dict(size=0),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -891,6 +894,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
             y=[-dim_level_one, -dim_level_one],
             mode='lines',
             line=dict(color=TT_orange, width=2),
+            marker=dict(size=0),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -902,6 +906,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
                 y=[-dim_level_one - 0.1, -dim_level_one + 0.1],
                 mode='lines',
                 line=dict(color=TT_orange, width=2),
+                marker=dict(size=0),
                 showlegend=False,
                 hoverinfo='skip'
             ))
@@ -922,6 +927,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
         y=[-dim_level_two, -dim_level_two],
         mode='lines',
         line=dict(color=TT_grey, width=2),
+        marker=dict(size=0),
         showlegend=False,
         hoverinfo='skip'
     ))
@@ -933,6 +939,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
             y=[-dim_level_two - 0.1, -dim_level_two + 0.1],
             mode='lines',
             line=dict(color=TT_grey, width=2),
+            marker=dict(size=0),
             showlegend=False,
             hoverinfo='skip'
         ))
