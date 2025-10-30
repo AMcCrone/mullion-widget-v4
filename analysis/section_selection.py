@@ -20,7 +20,7 @@ TT_Grey = 'rgb(150, 150, 150)'
 
 def load_section_database(material: str, excel_path: str = "data/mullion_profile_db.xlsx") -> pd.DataFrame:
     """
-    Load section database from Excel file.
+    Load section database from Excel file - CACHED VERSION.
     
     Parameters
     ----------
@@ -49,31 +49,24 @@ def load_section_database(material: str, excel_path: str = "data/mullion_profile
             st.error(f"Error reading Excel file: {e}")
         raise
     
-    # Standardize column names
-    column_mapping = {
-        'SUPPLIER': 'Supplier',
-        'NAME': 'Profile Name',
-        'MATERIAL': 'Material',
-        'REINF': 'Reinf',
-        'D': 'Depth',
-        'I': 'Iyy',  # cm⁴
-        'Z': 'Wyy'   # cm³
-    }
+    # Use columns EXACTLY as they are in Excel - NO MAPPING
+    required_cols = ['SUPPLIER', 'NAME', 'MATERIAL', 'REINF', 'D', 'I', 'Z']
     
-    df = df.rename(columns=column_mapping)
+    # Check if all required columns exist
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Missing columns in Excel file: {missing_cols}")
     
-    # Select required columns
-    required_cols = ['Supplier', 'Profile Name', 'Material', 'Reinf', 'Depth', 'Iyy', 'Wyy']
     df = df[required_cols].copy()
     
     # Convert numeric columns
-    df['Depth'] = pd.to_numeric(df['Depth'], errors='coerce')
-    df['Iyy'] = pd.to_numeric(df['Iyy'], errors='coerce')
-    df['Wyy'] = pd.to_numeric(df['Wyy'], errors='coerce')
-    df['Reinf'] = df['Reinf'].astype(bool)
+    df['D'] = pd.to_numeric(df['D'], errors='coerce')
+    df['I'] = pd.to_numeric(df['I'], errors='coerce')
+    df['Z'] = pd.to_numeric(df['Z'], errors='coerce')
+    df['REINF'] = df['REINF'].astype(bool)
     
     # Remove any rows with NaN in critical columns
-    df = df.dropna(subset=['Depth', 'Iyy', 'Wyy'])
+    df = df.dropna(subset=['D', 'I', 'Z'])
     
     return df
 
@@ -103,14 +96,14 @@ def filter_section_database(
     pd.DataFrame
         Filtered database
     """
-    df_filtered = df[df['Supplier'].isin(selected_suppliers)].copy()
+    df_filtered = df[df['SUPPLIER'].isin(selected_suppliers)].copy()
     
     # Filter by reinforcement
     reinf_mask = []
     if include_reinforced:
-        reinf_mask.append(df_filtered['Reinf'] == True)
+        reinf_mask.append(df_filtered['REINF'] == True)
     if include_unreinforced:
-        reinf_mask.append(df_filtered['Reinf'] == False)
+        reinf_mask.append(df_filtered['REINF'] == False)
     
     if reinf_mask:
         df_filtered = df_filtered[np.logical_or.reduce(reinf_mask)]
@@ -146,11 +139,11 @@ def generate_uls_plot(
     go.Figure
         Plotly figure
     """
-    depths = df['Depth'].values
-    Z_available = df['Wyy'].values  # Already in cm³
-    reinf = df['Reinf'].values
-    profiles = df['Profile Name'].values
-    suppliers = df['Supplier'].values
+    depths = df['D'].values
+    Z_available = df['Z'].values  # Already in cm³
+    reinf = df['REINF'].values
+    profiles = df['NAME'].values
+    suppliers = df['SUPPLIER'].values
     
     # Determine pass/fail
     uls_passed = Z_available >= Z_req_cm3
@@ -277,11 +270,11 @@ def generate_sls_plot(
     go.Figure
         Plotly figure
     """
-    depths = df['Depth'].values
-    I_available = df['Iyy'].values  # Already in cm⁴
-    reinf = df['Reinf'].values
-    profiles = df['Profile Name'].values
-    suppliers = df['Supplier'].values
+    depths = df['D'].values
+    I_available = df['I'].values  # Already in cm⁴
+    reinf = df['REINF'].values
+    profiles = df['NAME'].values
+    suppliers = df['SUPPLIER'].values
     
     # Determine pass/fail
     sls_passed = I_available >= I_req_cm4
@@ -402,11 +395,11 @@ def generate_utilisation_plot(
     Tuple[go.Figure, Optional[str]]
         Plotly figure and recommended profile text
     """
-    depths = df['Depth'].values
-    Z_available = df['Wyy'].values
-    I_available = df['Iyy'].values
-    profiles = df['Profile Name'].values
-    suppliers = df['Supplier'].values
+    depths = df['D'].values
+    Z_available = df['Z'].values
+    I_available = df['I'].values
+    profiles = df['NAME'].values
+    suppliers = df['SUPPLIER'].values
     
     # Calculate utilisations
     uls_util = []
@@ -528,8 +521,8 @@ def generate_section_table(
     df_table = df.copy()
     
     # Calculate utilisations
-    df_table['ULS Utilisation'] = Z_req_cm3 / df_table['Wyy']
-    df_table['SLS Utilisation'] = I_req_cm4 / df_table['Iyy']
+    df_table['ULS Utilisation'] = Z_req_cm3 / df_table['Z']
+    df_table['SLS Utilisation'] = I_req_cm4 / df_table['I']
     df_table['Max Utilisation'] = df_table[['ULS Utilisation', 'SLS Utilisation']].max(axis=1)
     
     # Separate passing and failing
@@ -545,8 +538,8 @@ def generate_section_table(
     # Combine
     df_sorted = pd.concat([df_pass, df_fail], ignore_index=True)
     
-    # Create display dataframe
-    df_display = df_sorted[['Supplier', 'Profile Name', 'Depth', 'Wyy', 'Iyy', 
+    # Create display dataframe - using original column names
+    df_display = df_sorted[['SUPPLIER', 'NAME', 'D', 'Z', 'I', 
                              'ULS Utilisation', 'SLS Utilisation']].copy()
     
     df_display.columns = ['Supplier', 'Profile Name', 'Depth (mm)', 'Z (cm³)', 
@@ -631,15 +624,21 @@ def section_selection_ui(
     parent.markdown("### Section Selection")
     parent.markdown("---")
     
-    # Load section database
+    # CACHED DATABASE LOADING - Only reads once per material+path combination
+    @st.cache_data(show_spinner="Loading section database...")
+    def cached_load_database(material: str, excel_path: str) -> pd.DataFrame:
+        """Cached version of load_section_database"""
+        return load_section_database(material, excel_path)
+    
+    # Load section database (cached!)
     try:
-        df_all = load_section_database(material, excel_path)
+        df_all = cached_load_database(material, excel_path)
     except Exception as e:
         parent.error(f"Failed to load section database: {e}")
         return
     
     # Get unique suppliers
-    all_suppliers = sorted(df_all['Supplier'].unique())
+    all_suppliers = sorted(df_all['SUPPLIER'].unique())
     
     # Filters in sidebar or expander
     parent.markdown("#### Filters")
