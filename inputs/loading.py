@@ -985,7 +985,7 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
         caption_parts.append(f"equivalent UDL from wind pressure $w$ = {wind_load_n_per_mm:.3f} N/mm")
     if loading_inputs.include_barrier:
         barrier_load_n = loading_inputs.barrier_load_n()
-        caption_parts.append(f"equivalent barrier point load $F_{BL}$ = {barrier_load_n:.0f} N at {loading_inputs.barrier_height_mm:.0f} mm")
+        caption_parts.append(f"equivalent barrier point load $F_BL$ = {barrier_load_n:.0f} N at {loading_inputs.barrier_height_mm:.0f} mm")
     
     if caption_parts:
         caption = f"**Figure:** Mullion beam model showing {' and '.join(caption_parts)}."
