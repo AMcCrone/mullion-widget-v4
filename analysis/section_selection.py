@@ -11,11 +11,11 @@ from pathlib import Path
 
 
 # Color scheme (matching your TikZ theme)
-TT_LightBlue = 'rgba(100, 150, 255, 0.3)'
-TT_MidBlue = 'rgb(50, 100, 200)'
-TT_DarkBlue = 'rgb(20, 50, 120)'
-TT_Orange = 'rgb(255, 140, 0)'
-TT_Grey = 'rgb(150, 150, 150)'
+TT_LightBlue = 'rgba(136,219,223, 0.3)'
+TT_MidBlue = 'rgb(0,163,173)'
+TT_DarkBlue = 'rgb(0,48,60)'
+TT_Orange = 'rgb(211,69,29)'
+TT_Grey = 'rgb(99,102,105)'
 
 
 def load_section_database(material: str, excel_path: str = "data/mullion_profile_db.xlsx") -> pd.DataFrame:
@@ -164,7 +164,7 @@ def generate_uls_plot(
     # Plot range
     x_min = np.min(depths) * 0.95 if len(depths) > 0 else 0
     x_max = np.max(depths) * 1.05 if len(depths) > 0 else 100
-    y_max = max(4 * Z_req_cm3, np.max(Z_available) * 1.1) if len(Z_available) > 0 else Z_req_cm3 * 4
+    y_max = 4 * Z_req_cm3
     
     # Create figure
     fig = go.Figure()
@@ -175,7 +175,7 @@ def generate_uls_plot(
         x0=x_min, x1=x_max,
         y0=Z_req_cm3, y1=y_max,
         fillcolor=TT_LightBlue,
-        opacity=0.3,
+        opacity=0.2,
         line_width=0,
         layer='below'
     )
@@ -185,20 +185,10 @@ def generate_uls_plot(
         type="rect",
         x0=x_min, x1=x_max,
         y0=0, y1=Z_req_cm3,
-        fillcolor='rgba(255, 140, 0, 0.2)',
-        opacity=0.3,
+        fillcolor=TT_MidBlue,
+        opacity=0.2,
         line_width=0,
         layer='below'
-    )
-    
-    # Required Z line
-    fig.add_hline(
-        y=Z_req_cm3,
-        line_dash="dash",
-        line_color=TT_DarkBlue,
-        line_width=2,
-        annotation_text=f"Required Z = {Z_req_cm3:.1f} cm³",
-        annotation_position="right"
     )
     
     # Scatter plot
@@ -209,7 +199,7 @@ def generate_uls_plot(
         marker=dict(
             color=uls_colors,
             symbol=uls_symbols,
-            size=12,
+            size=15,
             line=dict(color='black', width=1)
         ),
         text=uls_hover,
@@ -228,10 +218,10 @@ def generate_uls_plot(
     fig.update_layout(
         title=title_text,
         xaxis_title="Section Depth (mm)",
-        yaxis_title="Section Modulus Z (cm³)",
+        yaxis_title="Section Modulus (cm³)",
         xaxis=dict(range=[x_min, x_max]),
         yaxis=dict(range=[0, y_max]),
-        height=600,
+        height=650,
         hovermode='closest',
         plot_bgcolor='white'
     )
@@ -295,41 +285,31 @@ def generate_sls_plot(
     # Plot range
     x_min = np.min(depths) * 0.95 if len(depths) > 0 else 0
     x_max = np.max(depths) * 1.05 if len(depths) > 0 else 100
-    y_max = max(1.5 * I_req_cm4, np.max(I_available) * 1.1) if len(I_available) > 0 else I_req_cm4 * 1.5
+    y_max = 4 * I_req_cm4
     
     # Create figure
     fig = go.Figure()
     
-    # Pass region (above requirement)
+    # Pass region (below requirement - inverted for deflection/inertia)
     fig.add_shape(
         type="rect",
         x0=x_min, x1=x_max,
         y0=I_req_cm4, y1=y_max,
         fillcolor=TT_LightBlue,
-        opacity=0.3,
+        opacity=0.2,
         line_width=0,
         layer='below'
     )
     
-    # Fail region (below requirement)
+    # Fail region (above requirement - inverted for deflection/inertia)
     fig.add_shape(
         type="rect",
         x0=x_min, x1=x_max,
         y0=0, y1=I_req_cm4,
-        fillcolor='rgba(255, 140, 0, 0.2)',
-        opacity=0.3,
+        fillcolor=TT_MidBlue,
+        opacity=0.2,
         line_width=0,
         layer='below'
-    )
-    
-    # Required I line
-    fig.add_hline(
-        y=I_req_cm4,
-        line_dash="dash",
-        line_color=TT_DarkBlue,
-        line_width=2,
-        annotation_text=f"Required I = {I_req_cm4:.1f} cm⁴",
-        annotation_position="right"
     )
     
     # Scatter plot
@@ -340,7 +320,7 @@ def generate_sls_plot(
         marker=dict(
             color=sls_colors,
             symbol=sls_symbols,
-            size=12,
+            size=15,
             line=dict(color='black', width=1)
         ),
         text=sls_hover,
@@ -357,12 +337,16 @@ def generate_sls_plot(
     )
     
     fig.update_layout(
-        title=title_text,
+        title={
+            'text': title_text,
+            'x': 0.5,
+            'xanchor': 'center'
+        },
         xaxis_title="Section Depth (mm)",
         yaxis_title="Moment of Inertia I (cm⁴)",
         xaxis=dict(range=[x_min, x_max]),
         yaxis=dict(range=[0, y_max]),
-        height=600,
+        height=650,
         hovermode='closest',
         plot_bgcolor='white'
     )
