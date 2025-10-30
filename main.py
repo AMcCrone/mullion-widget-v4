@@ -42,35 +42,73 @@ st.markdown("---")
 # ========== DESIGN CRITERIA ==========
 st.header("Design Criteria")
 
-col1, col2, col3 = st.columns(3)
+# Row 1: Deflection Criteria
+st.subheader("Deflection Criteria")
+col1, col2 = st.columns(2)
 
 with col1:
-    deflection_limit_mm = st.number_input(
-        "Deflection Limit (mm)",
-        value=geom.span_mm / 250,  # Default L/250
-        min_value=1.0,
-        format="%.2f",
-        help="Maximum allowable deflection for SLS"
+    deflection_criteria = st.selectbox(
+        "Deflection Standard",
+        options=["CWCT Criteria", "Custom"],
+        index=0,
+        help="Select deflection criteria: CWCT standards or custom value"
     )
-    st.caption(f"≈ L/{geom.span_mm/deflection_limit_mm:.0f}")
 
 with col2:
+    L = geom.span_mm  # Mullion length in mm
+    
+    if deflection_criteria == "CWCT Criteria":
+        # Calculate CWCT deflection limit
+        if L <= 3000:
+            deflection_limit_mm = L / 200
+        elif L < 7500:
+            deflection_limit_mm = 5 + L / 300
+        else:
+            deflection_limit_mm = L / 250
+        
+        st.metric(
+            "Deflection Limit",
+            f"{deflection_limit_mm:.2f} mm",
+            help="Calculated per CWCT standards"
+        )
+    else:
+        # Custom deflection limit
+        deflection_limit_mm = st.number_input(
+            "Deflection Limit (mm)",
+            value=L / 250,
+            min_value=1.0,
+            format="%.2f",
+            help="Custom deflection limit"
+        )
+    
+    st.caption(f"≈ L/{L/deflection_limit_mm:.0f}")
+
+st.markdown("---")
+
+# Row 2: Material Safety Factor
+st.subheader("Material Safety Factor")
+col1, col2 = st.columns(2)
+
+# Determine default safety factor based on material
+default_safety_factor = 1.10 if mat.material_type.value == "Aluminium" else 1.0
+
+with col1:
     safety_factor = st.number_input(
         "Safety Factor for Bending",
-        value=1.5,
+        value=default_safety_factor,
         min_value=1.0,
         max_value=3.0,
-        step=0.1,
+        step=0.05,
         format="%.2f",
-        help="Applied to yield stress to get allowable stress"
+        help="Applied to yield stress to get allowable stress (γ_M)"
     )
 
-with col3:
+with col2:
     sigma_allow_Pa = mat.fy / safety_factor
     st.metric(
         "Allowable Stress",
         f"{sigma_allow_Pa/1e6:.1f} MPa",
-        help="σ_allow = fy / γ"
+        help="σ_allow = fy / γ_M"
     )
 
 st.markdown("---")
