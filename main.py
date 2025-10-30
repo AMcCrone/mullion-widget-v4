@@ -35,11 +35,11 @@ beam_model_diagram_ui(span_mm=span_mm,loading_inputs=loading_inputs)
 st.markdown("---")
 
 st.header("Load Cases")
-load_cases = load_cases_ui(container=st, key_prefix="main_load_cases")
+load_case_set = load_cases_ui(container=st, key_prefix="main_load_cases")
 st.markdown("---")
 
 # ========== DESIGN CRITERIA ==========
-st.header("⚙️ Design Criteria")
+st.header("Design Criteria")
 
 col1, col2, col3 = st.columns(3)
 
@@ -75,7 +75,7 @@ with col3:
 st.markdown("---")
 
 # ========== ANALYSIS ==========
-st.header("📊 Analysis Results")
+st.header("Results")
 
 # Run analyses
 with st.spinner("⏳ Analyzing load cases..."):
@@ -87,7 +87,7 @@ with st.spinner("⏳ Analyzing load cases..."):
 # ========================================
 # ULS ANALYSIS
 # ========================================
-st.subheader("🔴 Ultimate Limit State (ULS)")
+st.subheader("Ultimate Limit State (ULS)")
 
 # Governing values summary
 st.markdown("#### Governing Values")
@@ -238,7 +238,7 @@ st.markdown("---")
 # ========================================
 # SLS ANALYSIS
 # ========================================
-st.subheader("🟢 Serviceability Limit State (SLS)")
+st.subheader("Serviceability Limit State (SLS)")
 
 st.markdown("#### Deflection Requirements")
 
@@ -291,7 +291,7 @@ st.markdown("---")
 # ========================================
 # FINAL DESIGN SUMMARY
 # ========================================
-st.header("✅ Design Summary")
+st.header("Design Summary")
 
 st.markdown("""
 Select a section with properties that meet or exceed the following requirements:
