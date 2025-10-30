@@ -316,7 +316,7 @@ st.header("Section Selection")
 section_selection_ui(container=st,geometry_info={'span_mm': geom.span_mm,'bay_width_mm': geom.bay_width_mm},
     material=mat.material_type.value,  # "Aluminium" or "Steel"
     Z_req_cm3=compute_required_section_modulus(gov_M_val, sigma_allow_Pa)*1e6,
-    I_req_cm4=I_req_m4*1e8,
+    I_req_m4 = sls_results['governing']['I_req_m4']
     defl_limit_mm=sls_results['governing']['v_limit_mm'],
     uls_case_name=uls_results['governing']['case_name'],
     sls_case_name=sls_results['governing']['case_name'],
