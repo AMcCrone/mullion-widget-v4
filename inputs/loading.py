@@ -989,4 +989,3 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
     
     if caption_parts:
         caption = f"**Figure:** Mullion beam model showing {' and '.join(caption_parts)}."
-        parent.markdown(caption, unsafe_allow_html=True)
