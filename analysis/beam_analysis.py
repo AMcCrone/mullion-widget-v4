@@ -15,25 +15,25 @@ Example Usage:
 --------------
 ```python
 from input.geometry import Geometry
-from input.loading import LoadingInputs, Load, LoadKind
-from beam_analysis import analyze_loadcase
+from input.loading import LoadingInputs
+from input.material import Material, MaterialType
+from input.load_cases import LoadCaseSet
+from beam_analysis import analyze_uls_cases, analyze_sls_deflection_requirement
 
+# Setup inputs
 geom = Geometry(span_mm=3000, bay_width_mm=1000)
-# Example: wind 0.05 N/mm (=> 50 N/m), barrier 0.74 kN/m total -> as point P_N=0.74 * bay_width_mm
-loads = [
-   Load(kind=LoadKind.WIND, magnitude=0.05, distribution="uniform"),  # N/mm
-   Load(kind=LoadKind.BARRIER, magnitude=814.0, distribution="point", height_mm=1100)  # N
-]
-E = 69e9  # Pa
-I = 8.5e-6  # m^4 (example)
-results = analyze_loadcase(geom.span_mm, loads, E, I)
-# results contains arrays x_m, V_N, M_Nm, v_m, and scalars M_max_Nm and v_max_m
-```
+mat = Material.from_library(MaterialType.ALUMINIUM, "6063-T6")
+loading_inputs = LoadingInputs(...)
+load_case_set = LoadCaseSet.create_en1990_defaults()
 
-Wiring into Streamlit:
-----------------------
-Call `analyze_loadcase` for each LoadCase, passing the LoadCase.loads list.
-The results dict contains all arrays and scalars needed for plotting and sizing checks.
+# Analyze ULS (get M, V for all cases)
+uls_results = analyze_uls_cases(geom, loading_inputs, load_case_set)
+
+# Analyze SLS (get required I for deflection limit)
+sls_results = analyze_sls_deflection_requirement(
+    geom, loading_inputs, load_case_set, mat.E, deflection_limit_mm=20.0
+)
+```
 """
 
 from typing import List, Dict, Tuple, Optional
@@ -43,7 +43,7 @@ from dataclasses import dataclass
 
 def compute_wind_barrier_uniform_and_point(
     span_mm: float,
-    loads: List,  # List[Load] - avoiding import to keep module self-contained
+    loads: List,
     n_points: int = 501
 ) -> Dict[str, np.ndarray]:
     """
@@ -70,12 +70,6 @@ def compute_wind_barrier_uniform_and_point(
         - 'M': np.ndarray, bending moment in N·m
         - 'RA': float, left reaction in N
         - 'RB': float, right reaction in N
-    
-    Unit Conversions:
-    -----------------
-    - span: mm -> m (divide by 1000)
-    - uniform loads: N/mm -> N/m (multiply by 1000)
-    - point loads: already in N
     """
     # Convert span to metres
     L = span_mm / 1000.0  # m
@@ -84,8 +78,8 @@ def compute_wind_barrier_uniform_and_point(
     x_m = np.linspace(0, L, n_points)
     
     # Separate loads into uniform and point
-    uniform_loads = []  # List of (w_Npm,) tuples
-    point_loads = []    # List of (P_N, a_m) tuples
+    uniform_loads = []
+    point_loads = []
     
     for load in loads:
         if load.distribution == 'uniform':
@@ -96,28 +90,17 @@ def compute_wind_barrier_uniform_and_point(
             # Point load already in N
             P_N = load.magnitude
             # Assume point loads are applied at midspan unless specified
-            # For generality, we could add a position attribute to Load
-            # For now, assume midspan
             a_m = L / 2.0
             point_loads.append((P_N, a_m))
     
     # Compute reactions using equilibrium
-    # Total uniform load resultant
     W_total = sum(w * L for w in uniform_loads)
-    
-    # Total point loads
     P_total = sum(P for P, a in point_loads)
-    
-    # Total vertical load
     total_load = W_total + P_total
     
     # Moment equilibrium about left support to find RB
-    # For uniform loads: moment arm = L/2
     moment_uniform = sum(w * L * (L / 2.0) for w in uniform_loads)
-    
-    # For point loads: moment arm = a
     moment_point = sum(P * a for P, a in point_loads)
-    
     total_moment = moment_uniform + moment_point
     
     # Solve for reactions
@@ -128,7 +111,6 @@ def compute_wind_barrier_uniform_and_point(
         RA = RB = 0.0
     
     # Compute shear force V(x)
-    # V(x) = RA - sum(w_i * x) - sum(P_j for a_j <= x)
     V = np.zeros_like(x_m)
     
     for i, x in enumerate(x_m):
@@ -144,14 +126,11 @@ def compute_wind_barrier_uniform_and_point(
                 V[i] -= P
     
     # Compute bending moment M(x) by integrating V(x)
-    # M(x) = integral from 0 to x of V(s) ds
-    # Use cumulative trapezoidal integration
-    dx = x_m[1] - x_m[0]  # Assuming uniform spacing
+    dx = x_m[1] - x_m[0]
     M = np.zeros_like(x_m)
     M[0] = 0.0
     
     for i in range(1, len(x_m)):
-        # Trapezoidal rule: area = (V[i-1] + V[i]) * dx / 2
         M[i] = M[i-1] + (V[i-1] + V[i]) * dx / 2.0
     
     return {
@@ -175,12 +154,6 @@ def compute_deflection_from_M(
     For a simply-supported beam:
     - v''(x) = M(x) / (E * I)
     - Boundary conditions: v(0) = 0, v(L) = 0
-    
-    Method:
-    1. Compute curvature κ(x) = M(x) / (E * I)
-    2. Integrate once: θ(x) = ∫κ dx + C1
-    3. Integrate twice: v(x) = ∫θ dx + C2
-    4. Apply BCs to solve for C1 and C2
     
     Parameters:
     -----------
@@ -206,8 +179,7 @@ def compute_deflection_from_M(
     kappa = M / (E * I)
     
     # First integration: slope θ(x) = ∫κ dx
-    # Use cumulative trapezoidal integration
-    dx = x_m[1] - x_m[0]  # Assuming uniform spacing
+    dx = x_m[1] - x_m[0]
     theta = np.zeros_like(x_m)
     
     for i in range(1, len(x_m)):
@@ -220,10 +192,6 @@ def compute_deflection_from_M(
         v_raw[i] = v_raw[i-1] + (theta[i-1] + theta[i]) * dx / 2.0
     
     # Apply boundary conditions: v(0) = 0, v(L) = 0
-    # v(x) = v_raw(x) + C1*x + C2
-    # BC1: v(0) = v_raw(0) + C2 = 0  =>  C2 = -v_raw(0) = 0 (already satisfied)
-    # BC2: v(L) = v_raw(L) + C1*L + C2 = 0  =>  C1 = -(v_raw(L) + C2) / L
-    
     C2 = -v_raw[0]
     L = x_m[-1] - x_m[0]
     C1 = -(v_raw[-1] + C2) / L if L > 0 else 0.0
@@ -234,91 +202,272 @@ def compute_deflection_from_M(
     return v, C1, C2
 
 
-def analyze_loadcase(
-    span_mm: float,
-    loads: List,
-    E: float,
-    I: float,
-    n_points: int = 501
-) -> Dict:
+def apply_load_factors(loads: List, wind_factor: float, barrier_factor: float) -> List:
     """
-    Perform complete beam analysis for a load case.
+    Apply partial factors to loads and return new list.
     
     Parameters:
     -----------
-    span_mm : float
-        Span length in millimeters
     loads : List[Load]
-        List of Load objects
-    E : float
-        Young's modulus in Pa
-    I : float
-        Second moment of area in m^4
-    n_points : int
-        Number of discretization points (default 501)
+        Base loads from LoadingInputs
+    wind_factor : float
+        Partial factor for wind load
+    barrier_factor : float
+        Partial factor for barrier load
     
     Returns:
     --------
-    dict with keys:
-        - 'x_m': np.ndarray, position in metres
-        - 'V_N': np.ndarray, shear force in N
-        - 'M_Nm': np.ndarray, bending moment in N·m
-        - 'RA_N': float, left reaction in N
-        - 'RB_N': float, right reaction in N
-        - 'M_max_Nm': float, maximum bending moment magnitude in N·m
-        - 'x_Mmax_m': float, location of M_max in m
-        - 'V_max_N': float, maximum shear force magnitude in N
-        - 'x_Vmax_m': float, location of V_max in m
-        - 'v_m': np.ndarray, deflection in metres
-        - 'v_max_m': float, maximum deflection magnitude in m
-        - 'x_vmax_m': float, location of v_max in m
+    List[Load]
+        New list with factored magnitudes
     """
-    # Compute reactions and internal forces
-    results = compute_wind_barrier_uniform_and_point(span_mm, loads, n_points)
+    from copy import deepcopy
     
-    x_m = results['x_m']
-    V = results['V']
-    M = results['M']
-    RA = results['RA']
-    RB = results['RB']
+    factored_loads = []
+    for load in loads:
+        load_copy = deepcopy(load)
+        
+        # Apply appropriate factor based on load kind
+        if hasattr(load, 'kind'):
+            if 'WIND' in str(load.kind).upper():
+                load_copy.magnitude *= wind_factor
+            elif 'BARRIER' in str(load.kind).upper():
+                load_copy.magnitude *= barrier_factor
+        
+        factored_loads.append(load_copy)
     
-    # Find maximum moment
-    M_abs = np.abs(M)
-    idx_Mmax = np.argmax(M_abs)
-    M_max_Nm = M_abs[idx_Mmax]
-    x_Mmax_m = x_m[idx_Mmax]
+    return factored_loads
+
+
+def analyze_uls_cases(
+    geom,
+    loading_inputs,
+    load_case_set,
+    n_points: int = 501
+) -> Dict:
+    """
+    Analyze all ULS load cases to get reactions, shear, and moment.
+    NO deflection calculation - we only need M and V for strength checks.
     
-    # Find maximum shear
-    V_abs = np.abs(V)
-    idx_Vmax = np.argmax(V_abs)
-    V_max_N = V_abs[idx_Vmax]
-    x_Vmax_m = x_m[idx_Vmax]
+    Parameters:
+    -----------
+    geom : Geometry
+        Geometry object with span_mm
+    loading_inputs : LoadingInputs
+        Loading inputs object
+    load_case_set : LoadCaseSet
+        Container with ULS and SLS load cases
+    n_points : int
+        Number of discretization points
     
-    # Compute deflection
-    v, C1, C2 = compute_deflection_from_M(x_m, M, E, I)
-    
-    # Find maximum deflection (by magnitude)
-    v_abs = np.abs(v)
-    idx_vmax = np.argmax(v_abs)
-    v_max_m = v_abs[idx_vmax]
-    x_vmax_m = x_m[idx_vmax]
-    
-    return {
-        'x_m': x_m,
-        'V_N': V,
-        'M_Nm': M,
-        'RA_N': RA,
-        'RB_N': RB,
-        'M_max_Nm': M_max_Nm,
-        'x_Mmax_m': x_Mmax_m,
-        'V_max_N': V_max_N,
-        'x_Vmax_m': x_Vmax_m,
-        'v_m': v,
-        'v_max_m': v_max_m,
-        'x_vmax_m': x_vmax_m,
-        'C1': C1,
-        'C2': C2
+    Returns:
+    --------
+    Dict with structure:
+    {
+        'cases': {
+            'case_name_1': {
+                'x_m': array,
+                'V_N': array,
+                'M_Nm': array,
+                'RA_N': float,
+                'RB_N': float,
+                'M_max_Nm': float,
+                'V_max_N': float
+            },
+            ...
+        },
+        'governing': {
+            'M_max': ('case_name', value),
+            'V_max': ('case_name', value),
+            'case_M': 'case_name',
+            'case_V': 'case_name'
+        }
     }
+    """
+    base_loads = loading_inputs.to_loads()
+    
+    results = {
+        'cases': {},
+        'governing': {}
+    }
+    
+    M_max_overall = 0.0
+    M_max_case = None
+    V_max_overall = 0.0
+    V_max_case = None
+    
+    for case in load_case_set.uls_cases:
+        # Apply load factors
+        factored_loads = apply_load_factors(
+            base_loads,
+            case.wind_factor,
+            case.barrier_factor
+        )
+        
+        # Analyze this case
+        analysis = compute_wind_barrier_uniform_and_point(
+            span_mm=geom.span_mm,
+            loads=factored_loads,
+            n_points=n_points
+        )
+        
+        # Find max values
+        M_abs = np.abs(analysis['M'])
+        V_abs = np.abs(analysis['V'])
+        
+        M_max = np.max(M_abs)
+        V_max = np.max(V_abs)
+        
+        x_Mmax = analysis['x_m'][np.argmax(M_abs)]
+        x_Vmax = analysis['x_m'][np.argmax(V_abs)]
+        
+        # Store case results
+        results['cases'][case.name] = {
+            'x_m': analysis['x_m'],
+            'V_N': analysis['V'],
+            'M_Nm': analysis['M'],
+            'RA_N': analysis['RA'],
+            'RB_N': analysis['RB'],
+            'M_max_Nm': M_max,
+            'V_max_N': V_max,
+            'x_Mmax_m': x_Mmax,
+            'x_Vmax_m': x_Vmax
+        }
+        
+        # Track governing
+        if M_max > M_max_overall:
+            M_max_overall = M_max
+            M_max_case = case.name
+        
+        if V_max > V_max_overall:
+            V_max_overall = V_max
+            V_max_case = case.name
+    
+    results['governing'] = {
+        'M_max': (M_max_case, M_max_overall),
+        'V_max': (V_max_case, V_max_overall),
+        'case_M': M_max_case,
+        'case_V': V_max_case
+    }
+    
+    return results
+
+
+def analyze_sls_deflection_requirement(
+    geom,
+    loading_inputs,
+    load_case_set,
+    E: float,
+    deflection_limit_mm: float,
+    n_points: int = 501
+) -> Dict:
+    """
+    Analyze all SLS load cases to determine required second moment of area (I).
+    
+    Method:
+    1. For each SLS case, compute M(x) with factored loads
+    2. Compute deflection with I = 1.0 m^4 (unit deflection)
+    3. Scale to find required I: I_req = v_unit_max / v_limit
+    4. Return the governing I_req across all SLS cases
+    
+    Parameters:
+    -----------
+    geom : Geometry
+        Geometry object with span_mm
+    loading_inputs : LoadingInputs
+        Loading inputs object
+    load_case_set : LoadCaseSet
+        Container with SLS load cases
+    E : float
+        Young's modulus in Pa
+    deflection_limit_mm : float
+        Deflection limit in millimeters
+    n_points : int
+        Number of discretization points
+    
+    Returns:
+    --------
+    Dict with structure:
+    {
+        'cases': {
+            'case_name_1': {
+                'I_req_m4': float,
+                'v_unit_max_m': float (deflection with I=1.0)
+            },
+            ...
+        },
+        'governing': {
+            'I_req_m4': float (maximum required I),
+            'case': 'case_name',
+            'v_limit_m': float
+        }
+    }
+    """
+    base_loads = loading_inputs.to_loads()
+    v_limit_m = deflection_limit_mm / 1000.0  # Convert to metres
+    
+    results = {
+        'cases': {},
+        'governing': {}
+    }
+    
+    I_req_max = 0.0
+    I_req_case = None
+    
+    for case in load_case_set.sls_cases:
+        # Apply load factors
+        factored_loads = apply_load_factors(
+            base_loads,
+            case.wind_factor,
+            case.barrier_factor
+        )
+        
+        # Get moment diagram
+        analysis = compute_wind_barrier_uniform_and_point(
+            span_mm=geom.span_mm,
+            loads=factored_loads,
+            n_points=n_points
+        )
+        
+        # Compute deflection with I = 1.0 m^4 (unit deflection)
+        I_unit = 1.0
+        v_unit, _, _ = compute_deflection_from_M(
+            x_m=analysis['x_m'],
+            M=analysis['M'],
+            E=E,
+            I=I_unit
+        )
+        
+        # Find max deflection
+        v_unit_max = np.max(np.abs(v_unit))
+        
+        # Calculate required I to meet deflection limit
+        # v_actual = v_unit / I_req
+        # v_actual = v_limit
+        # => I_req = v_unit / v_limit
+        if v_limit_m > 0 and v_unit_max > 0:
+            I_req = v_unit_max / v_limit_m
+        else:
+            I_req = 0.0
+        
+        # Store case results
+        results['cases'][case.name] = {
+            'I_req_m4': I_req,
+            'v_unit_max_m': v_unit_max
+        }
+        
+        # Track governing (maximum required I)
+        if I_req > I_req_max:
+            I_req_max = I_req
+            I_req_case = case.name
+    
+    results['governing'] = {
+        'I_req_m4': I_req_max,
+        'case': I_req_case,
+        'v_limit_m': v_limit_m,
+        'v_limit_mm': deflection_limit_mm
+    }
+    
+    return results
 
 
 def compute_required_section_modulus(
@@ -346,55 +495,3 @@ def compute_required_section_modulus(
         return float('inf')
     
     return M_max_Nm / sigma_allow_Pa
-
-
-def compute_required_I_for_deflection(
-    span_mm: float,
-    loads: List,
-    E: float,
-    v_limit_m: float,
-    n_points: int = 501
-) -> float:
-    """
-    Compute required second moment of area to satisfy deflection limit.
-    
-    Method: Since v ∝ 1/I, we compute deflection with I=1.0 m^4, then scale.
-    I_req = v_unit_max / v_limit
-    
-    Parameters:
-    -----------
-    span_mm : float
-        Span length in millimeters
-    loads : List[Load]
-        List of Load objects
-    E : float
-        Young's modulus in Pa
-    v_limit_m : float
-        Deflection limit in metres
-    n_points : int
-        Number of discretization points
-    
-    Returns:
-    --------
-    I_req_m4 : float
-        Required second moment of area in m^4
-    """
-    if v_limit_m <= 0:
-        return float('inf')
-    
-    # Compute deflection with I = 1.0 m^4
-    I_unit = 1.0
-    results_unit = analyze_loadcase(span_mm, loads, E, I_unit, n_points)
-    v_unit_max = results_unit['v_max_m']
-    
-    # Scale to find required I
-    # v_max_actual = v_unit_max / I_req
-    # v_max_actual = v_limit
-    # => I_req = v_unit_max / v_limit
-    
-    if v_unit_max <= 0:
-        return 0.0
-    
-    I_req_m4 = v_unit_max / v_limit_m
-    
-    return I_req_m4
