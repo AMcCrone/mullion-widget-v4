@@ -7,11 +7,6 @@ from typing import Dict, Optional
 class MaterialType(str, Enum):
     STEEL = "Steel"
     ALUMINIUM = "Aluminium"
-6061, 140
-6063, 160
-6005A T6, 225
-6082 T5, 230
-6082 T6, 250
 
 _DEFAULT_MATERIAL_LIBRARY: Dict[MaterialType, Dict[str, Dict]] = {
     MaterialType.STEEL: {
