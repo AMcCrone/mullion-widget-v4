@@ -370,26 +370,25 @@ st.dataframe(sls_data, width='stretch', hide_index=True)
 
 st.markdown("---")
 
-# Custom CSS targeting a specific container
+# ========================================
+# FINAL DESIGN SUMMARY
+# ========================================
+
+# Custom CSS for design summary
 st.markdown("""
     <style>
-    [data-testid="stVerticalBlockBorderWrapper"]:has(div[data-testid="stVerticalBlock"] > div[data-testid="element-container"] > div[data-testid="stMarkdown"] > div[data-testid="stMarkdownContainer"] > p:first-child:contains("DESIGN_SUMMARY_MARKER")) {
+    div[data-testid="stVerticalBlock"]:has(> div > h2:first-child) {
         background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
-        padding: 25px !important;
+        padding: 25px;
         border-radius: 12px;
         border-left: 6px solid #0068C9;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin: 20px 0 !important;
-    }
-    /* Hide the marker */
-    p:contains("DESIGN_SUMMARY_MARKER") {
-        display: none;
+        margin: 20px 0;
     }
     </style>
     """, unsafe_allow_html=True)
 
 with st.container():
-    st.markdown("DESIGN_SUMMARY_MARKER")  # Hidden marker for CSS targeting
     st.header("Design Summary")
     st.markdown("""
     Select a section with properties that meet or exceed the following requirements:
