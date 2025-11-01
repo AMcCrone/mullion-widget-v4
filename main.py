@@ -41,6 +41,12 @@ bay_width_mm = st.session_state.inputs.get("main_geom_bay_width_mm", 1000.0)
 
 # Get loading inputs (only call once)
 loading_inputs = loading_ui(container=st, key_prefix="main_load", bay_width_mm=bay_width_mm)
+# Debug: Check loading_inputs attributes
+st.write("### Debug Info")
+st.write("Loading inputs object:", loading_inputs)
+st.write("All attributes:", vars(loading_inputs))
+st.write("wind_pressure_kpa:", getattr(loading_inputs, 'wind_pressure_kpa', 'NOT FOUND'))
+st.write("barrier_load_kn_per_m:", getattr(loading_inputs, 'barrier_load_kn_per_m', 'NOT FOUND'))
 
 # Display diagram using the same loading_inputs
 loading_diagram_ui(container=st,key_prefix="main_load",span_mm=span_mm,bay_width_mm=bay_width_mm,loading_inputs=loading_inputs)
