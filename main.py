@@ -10,6 +10,8 @@ from analysis.section_selection import section_selection_ui
 
 import plotly.graph_objects as go
 import numpy as np
+# Initialize st_yled
+st_yled.init()
 
 authenticate_user()
 
