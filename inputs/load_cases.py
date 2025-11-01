@@ -154,14 +154,14 @@ class LoadCaseSet:
     def create_en1990_defaults(cls) -> "LoadCaseSet":
         """Create LoadCaseSet with BS EN 1990 default cases"""
         uls_cases = [
-            LoadCombination("ULS 1: 1.5W + 0.75L", 1.5, 0.75, "ULS"),
-            LoadCombination("ULS 2: 0.75W + 1.5L", 0.75, 1.5, "ULS"),
+            LoadCombination("ULS 1: 1.5W + 0.9L", 1.5, 0.9, "ULS"),
+            LoadCombination("ULS 2: 0.9W + 1.5L", 0.9, 1.5, "ULS"),
             LoadCombination("ULS 3: 1.5W", 1.5, 0.0, "ULS"),
             LoadCombination("ULS 4: 1.5L", 0.0, 1.5, "ULS")
         ]
         sls_cases = [
-            LoadCombination("SLS 1: W", 1.0, 0.0, "SLS"),
-            LoadCombination("SLS 2: L", 0.0, 1.0, "SLS")
+            LoadCombination("SLS 1: W + 0.5L", 1.0, 0.5, "SLS"),
+            LoadCombination("SLS 2: 0.5W + L", 0.5, 1.0, "SLS")
         ]
         return cls(uls_cases=uls_cases, sls_cases=sls_cases)
     
@@ -169,7 +169,7 @@ class LoadCaseSet:
     def create_sbc301_defaults(cls) -> "LoadCaseSet":
         """Create LoadCaseSet with SBC-301 default cases"""
         uls_cases = [
-            LoadCombination("ULS 1: 1.6L + 0.5W", 0.5, 1.6, "ULS"),
+            LoadCombination("ULS 1: 0.5W + 1.6L", 0.5, 1.6, "ULS"),
             LoadCombination("ULS 2: W + 0.5L", 1.0, 0.5, "ULS"),
             LoadCombination("ULS 3: W", 1.0, 0.0, "ULS")
         ]
