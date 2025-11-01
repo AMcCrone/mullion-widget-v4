@@ -87,13 +87,13 @@ def create_design_json(
         },
         
         "loading": {
-            "include_wind": getattr(loading_inputs, 'include_wind', False),
-            "wind_pressure_kPa": getattr(loading_inputs, 'wind_pressure_kpa', 0),
-            "wind_pressure_Pa": getattr(loading_inputs, 'wind_pressure_kpa', 0) * 1000 if getattr(loading_inputs, 'include_wind', False) else 0,
-            "include_barrier": getattr(loading_inputs, 'include_barrier', False),
-            "barrier_load_kN_m": getattr(loading_inputs, 'barrier_load_kn_per_m', 0),
-            "barrier_load_N_m": getattr(loading_inputs, 'barrier_load_kn_per_m', 0) * 1000 if getattr(loading_inputs, 'include_barrier', False) else 0,
-            "barrier_height_mm": getattr(loading_inputs, 'barrier_height_mm', 1100),
+            "include_wind": loading_inputs.include_wind if hasattr(loading_inputs, 'include_wind') else False,
+            "wind_pressure_kPa": loading_inputs.wind_pressure_kpa if hasattr(loading_inputs, 'wind_pressure_kpa') else 0,
+            "wind_pressure_Pa": (loading_inputs.wind_pressure_kpa * 1000) if (hasattr(loading_inputs, 'wind_pressure_kpa') and loading_inputs.include_wind) else 0,
+            "include_barrier": loading_inputs.include_barrier if hasattr(loading_inputs, 'include_barrier') else False,
+            "barrier_load_kN_m": loading_inputs.barrier_load_kn_per_m if hasattr(loading_inputs, 'barrier_load_kn_per_m') else 0,
+            "barrier_load_N_m": (loading_inputs.barrier_load_kn_per_m * 1000) if (hasattr(loading_inputs, 'barrier_load_kn_per_m') and loading_inputs.include_barrier) else 0,
+            "barrier_height_mm": loading_inputs.barrier_height_mm if hasattr(loading_inputs, 'barrier_height_mm') else 1100,
         },
         
         "load_cases": {
@@ -213,3 +213,27 @@ def add_json_download_button(
         mime="application/json",
         help="Download design data as JSON for report generation"
     )
+
+
+# Example usage in your main app:
+# After all analysis is complete, add this near the end of your script:
+"""
+# Create the JSON data
+design_json = create_design_json(
+    geom=geom,
+    mat=mat,
+    loading_inputs=loading_inputs,
+    load_case_set=load_case_set,
+    deflection_limit_mm=deflection_limit_mm,
+    deflection_criteria=deflection_criteria,
+    safety_factor=safety_factor,
+    sigma_allow_Pa=sigma_allow_Pa,
+    uls_results=uls_results,
+    sls_results=sls_results,
+    Z_req=Z_req,
+    I_req=I_req
+)
+
+# Add download button to sidebar
+add_json_download_button(design_json)
+"""
