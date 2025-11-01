@@ -374,39 +374,6 @@ st.markdown("---")
 # FINAL DESIGN SUMMARY
 # ========================================
 
-# Custom CSS for the design summary container
-st.markdown("""
-    <style>
-    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
-        background-color: #f0f8ff;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 5px solid #0068C9;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-with st.container():
-    st.header("Design Summary")
-    st.markdown("""
-    Select a section with properties that meet or exceed the following requirements:
-    """)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("### Strength (ULS)")
-        st.metric("Minimum Z required", f"{Z_req*1e6:.2f} cm³")
-        st.caption(f"Based on {gov_M_case}")
-    with col2:
-        st.markdown("### Stiffness (SLS)")
-        st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
-        st.caption(f"Based on {gov_sls_case}")
-
-st.header("Section Selection")
-However, the CSS selector above might affect other containers. For a more targeted approach, you can use a unique identifier:
-python# ========================================
-# FINAL DESIGN SUMMARY
-# ========================================
-
 # Custom CSS for design summary - more specific targeting
 st.markdown("""
     <style>
