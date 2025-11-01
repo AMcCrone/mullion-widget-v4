@@ -657,7 +657,7 @@ def section_selection_ui(
         parent.warning("No sections match the selected filters.")
         return
     
-    st_yled.info(f"**{len(df_filtered)}** sections selected from database", color="TT_LightBlue")
+    st_yled.info(f"**{len(df_filtered)}** sections selected from database", color="TT_MidBlue")
     
     parent.markdown("---")
     
