@@ -8,8 +8,6 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Dict, Tuple, List, Optional
 from pathlib import Path
-import st_yled
-st_yled.init()
 
 # Color scheme (matching your TikZ theme)
 TT_LightBlue = 'rgba(136,219,223, 0.3)'
@@ -657,7 +655,7 @@ def section_selection_ui(
         parent.warning("No sections match the selected filters.")
         return
     
-    st_yled.info(f"**{len(df_filtered)}** sections selected from database", color="TT_MidBlue")
+    parent.info(f"**{len(df_filtered)}** sections selected from database")
     
     parent.markdown("---")
     
