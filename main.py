@@ -374,21 +374,20 @@ st.markdown("---")
 # FINAL DESIGN SUMMARY
 # ========================================
 
-# Custom CSS for design summary
 st.markdown("""
     <style>
-    div[data-testid="stVerticalBlock"]:has(> div > h2:first-child) {
-        background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
-        padding: 25px;
-        border-radius: 12px;
-        border-left: 6px solid #0068C9;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin: 20px 0;
+    /* Style containers with borders */
+    div[data-testid="stVerticalBlock"]:has(> div[data-testid="stVerticalBlockBorderWrapper"]) 
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%) !important;
+        border-left: 6px solid #0068C9 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-with st.container():
+with st.container(border=True):
     st.header("Design Summary")
     st.markdown("""
     Select a section with properties that meet or exceed the following requirements:
