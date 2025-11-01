@@ -370,35 +370,39 @@ st.dataframe(sls_data, width='stretch', hide_index=True)
 
 st.markdown("---")
 
+# Custom CSS targeting a specific container
 st.markdown("""
     <style>
-    .design-summary-wrapper {
+    [data-testid="stVerticalBlockBorderWrapper"]:has(div[data-testid="stVerticalBlock"] > div[data-testid="element-container"] > div[data-testid="stMarkdown"] > div[data-testid="stMarkdownContainer"] > p:first-child:contains("DESIGN_SUMMARY_MARKER")) {
         background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
-        padding: 25px;
+        padding: 25px !important;
         border-radius: 12px;
         border-left: 6px solid #0068C9;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin: 20px 0;
+        margin: 20px 0 !important;
+    }
+    /* Hide the marker */
+    p:contains("DESIGN_SUMMARY_MARKER") {
+        display: none;
     }
     </style>
-    <div class="design-summary-wrapper">
     """, unsafe_allow_html=True)
 
-st.header("Design Summary")
-st.markdown("""
-Select a section with properties that meet or exceed the following requirements:
-""")
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("### Strength (ULS)")
-    st.metric("Minimum Z required", f"{Z_req*1e6:.2f} cm³")
-    st.caption(f"Based on {gov_M_case}")
-with col2:
-    st.markdown("### Stiffness (SLS)")
-    st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
-    st.caption(f"Based on {gov_sls_case}")
-
-st.markdown("</div>", unsafe_allow_html=True)
+with st.container():
+    st.markdown("DESIGN_SUMMARY_MARKER")  # Hidden marker for CSS targeting
+    st.header("Design Summary")
+    st.markdown("""
+    Select a section with properties that meet or exceed the following requirements:
+    """)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("### Strength (ULS)")
+        st.metric("Minimum Z required", f"{Z_req*1e6:.2f} cm³")
+        st.caption(f"Based on {gov_M_case}")
+    with col2:
+        st.markdown("### Stiffness (SLS)")
+        st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
+        st.caption(f"Based on {gov_sls_case}")
 
 st.header("Section Selection")
 
