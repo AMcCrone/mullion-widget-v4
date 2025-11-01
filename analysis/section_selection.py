@@ -8,7 +8,8 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Dict, Tuple, List, Optional
 from pathlib import Path
-
+import st_yled
+st_yled.init()
 
 # Color scheme (matching your TikZ theme)
 TT_LightBlue = 'rgba(136,219,223, 0.3)'
