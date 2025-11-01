@@ -370,29 +370,19 @@ st.dataframe(sls_data, width='stretch', hide_index=True)
 
 st.markdown("---")
 
-# ========================================
-# FINAL DESIGN SUMMARY
-# ========================================
-
-# Custom CSS for design summary - more specific targeting
 st.markdown("""
     <style>
-    div.design-summary-box {
-        background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    .design-summary-wrapper {
+        background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
         padding: 25px;
         border-radius: 12px;
         border-left: 6px solid #0068C9;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         margin: 20px 0;
     }
-    div.design-summary-box h2 {
-        color: #0068C9;
-        margin-top: 0;
-    }
     </style>
+    <div class="design-summary-wrapper">
     """, unsafe_allow_html=True)
-
-st.markdown('<div class="design-summary-box">', unsafe_allow_html=True)
 
 st.header("Design Summary")
 st.markdown("""
@@ -408,7 +398,7 @@ with col2:
     st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
     st.caption(f"Based on {gov_sls_case}")
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 st.header("Section Selection")
 
