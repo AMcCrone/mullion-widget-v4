@@ -13,6 +13,12 @@ import numpy as np
 # Initialize st_yled
 st_yled.init()
 
+TT_LightBlue = 'rgba(136,219,223, 0.3)'
+TT_MidBlue = 'rgb(0,163,173)'
+TT_DarkBlue = 'rgb(0,48,60)'
+TT_Orange = 'rgb(211,69,29)'
+TT_Grey = 'rgb(99,102,105)'
+
 authenticate_user()
 
 st.set_page_config(page_title="TT Mullion Sizing App")
@@ -376,7 +382,7 @@ st.markdown("---")
 # ========================================
 # FINAL DESIGN SUMMARY
 # ========================================
-with st_yled.container(background_color="rgb(0,163,173)"):
+with st_yled.container(background_color=TT_LightBlue, border_color=TT_MidBlue, border_style="solid", border_wdith=2.0):
     st.header("Design Summary")
     st.markdown("""
     Select a section with properties that meet or exceed the following requirements:
