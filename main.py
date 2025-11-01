@@ -402,6 +402,48 @@ with st.container():
         st.caption(f"Based on {gov_sls_case}")
 
 st.header("Section Selection")
+However, the CSS selector above might affect other containers. For a more targeted approach, you can use a unique identifier:
+python# ========================================
+# FINAL DESIGN SUMMARY
+# ========================================
+
+# Custom CSS for design summary - more specific targeting
+st.markdown("""
+    <style>
+    div.design-summary-box {
+        background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+        padding: 25px;
+        border-radius: 12px;
+        border-left: 6px solid #0068C9;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+    div.design-summary-box h2 {
+        color: #0068C9;
+        margin-top: 0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.markdown('<div class="design-summary-box">', unsafe_allow_html=True)
+
+st.header("Design Summary")
+st.markdown("""
+Select a section with properties that meet or exceed the following requirements:
+""")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("### Strength (ULS)")
+    st.metric("Minimum Z required", f"{Z_req*1e6:.2f} cm³")
+    st.caption(f"Based on {gov_M_case}")
+with col2:
+    st.markdown("### Stiffness (SLS)")
+    st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
+    st.caption(f"Based on {gov_sls_case}")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.header("Section Selection")
 
 # Call the section selection UI
 section_selection_ui(
