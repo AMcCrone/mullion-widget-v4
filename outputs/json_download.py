@@ -87,8 +87,8 @@ def create_design_json(
         },
         
         "loading": {
-            "wind_pressure_Pa": getattr(loading_inputs, 'wind_pressure_Pa', None),
-            "barrier_load_N_m": getattr(loading_inputs, 'barrier_load_N_m', None),
+            "wind_pressure_Pa": getattr(loading_inputs, 'wind_pressure_Pa', 0) or 0,
+            "barrier_load_N_m": getattr(loading_inputs, 'barrier_load_N_m', 0) or 0,
             # Add other loading attributes as needed
         },
         
