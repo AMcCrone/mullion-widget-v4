@@ -114,7 +114,7 @@ class LoadCaseSet:
     
     @staticmethod
     def _default_uls_dataframe() -> pd.DataFrame:
-        """Return default EN 1990 ULS load cases"""
+        """Return default CWCT TU 14 ULS load cases"""
         return pd.DataFrame({
             'Load Case': [
                 'ULS 1: 1.5W + 0.75L',
@@ -128,7 +128,7 @@ class LoadCaseSet:
     
     @staticmethod
     def _default_sls_dataframe() -> pd.DataFrame:
-        """Return default EN 1990 SLS load cases"""
+        """Return default CWCT TU 14 SLS load cases"""
         return pd.DataFrame({
             'Load Case': ['SLS 1: W', 'SLS 2: L'],
             'Wind Factor': [1.0, 0.0],
@@ -136,8 +136,8 @@ class LoadCaseSet:
         })
     
     @classmethod
-    def create_en1990_defaults(cls) -> "LoadCaseSet":
-        """Create LoadCaseSet with EN 1990 default cases"""
+    def create_cwct_tu14_defaults(cls) -> "LoadCaseSet":
+        """Create LoadCaseSet with CWCT TU 14 default cases"""
         uls_cases = [
             LoadCombination("ULS 1: 1.5W + 0.75L", 1.5, 0.75, "ULS"),
             LoadCombination("ULS 2: 0.75W + 1.5L", 0.75, 1.5, "ULS"),
@@ -151,19 +151,45 @@ class LoadCaseSet:
         return cls(uls_cases=uls_cases, sls_cases=sls_cases)
     
     @classmethod
-    def create_custom_defaults(cls) -> "LoadCaseSet":
-        """Create LoadCaseSet with custom load cases"""
+    def create_en1990_defaults(cls) -> "LoadCaseSet":
+        """Create LoadCaseSet with BS EN 1990 default cases"""
         uls_cases = [
-            LoadCombination("ULS 1: W + L", 1.0, 1.0, "ULS"),
-            LoadCombination("ULS 2: 0.5W + 1.6L", 0.5, 1.6, "ULS"),
-            LoadCombination("ULS 3: W + 0.5L", 1.0, 0.5, "ULS"),
-            LoadCombination("ULS 4: W", 1.0, 0.0, "ULS")
+            LoadCombination("ULS 1: 1.5W + 0.75L", 1.5, 0.75, "ULS"),
+            LoadCombination("ULS 2: 0.75W + 1.5L", 0.75, 1.5, "ULS"),
+            LoadCombination("ULS 3: 1.5W", 1.5, 0.0, "ULS"),
+            LoadCombination("ULS 4: 1.5L", 0.0, 1.5, "ULS")
         ]
         sls_cases = [
-            LoadCombination("SLS 1: W + L", 1.0, 1.0, "SLS"),
+            LoadCombination("SLS 1: W", 1.0, 0.0, "SLS"),
+            LoadCombination("SLS 2: L", 0.0, 1.0, "SLS")
+        ]
+        return cls(uls_cases=uls_cases, sls_cases=sls_cases)
+    
+    @classmethod
+    def create_sbc301_defaults(cls) -> "LoadCaseSet":
+        """Create LoadCaseSet with SBC-301 default cases"""
+        uls_cases = [
+            LoadCombination("ULS 1: 1.6L + 0.5W", 0.5, 1.6, "ULS"),
+            LoadCombination("ULS 2: W + 0.5L", 1.0, 0.5, "ULS"),
+            LoadCombination("ULS 3: W", 1.0, 0.0, "ULS")
+        ]
+        sls_cases = [
+            LoadCombination("SLS 1: L", 0.0, 1.0, "SLS"),
             LoadCombination("SLS 2: 0.75L", 0.0, 0.75, "SLS"),
             LoadCombination("SLS 3: 0.6W", 0.6, 0.0, "SLS"),
-            LoadCombination("SLS 4: 0.45W + 0.75L", 0.45, 0.75, "SLS")
+            LoadCombination("SLS 4: 0.45W + 0.75L", 0.45, 0.75, "SLS"),
+            LoadCombination("SLS 5: 0.6W", 0.6, 0.0, "SLS")
+        ]
+        return cls(uls_cases=uls_cases, sls_cases=sls_cases)
+    
+    @classmethod
+    def create_blank(cls) -> "LoadCaseSet":
+        """Create empty LoadCaseSet for custom entry"""
+        uls_cases = [
+            LoadCombination("ULS 1: Custom", 0.0, 0.0, "ULS")
+        ]
+        sls_cases = [
+            LoadCombination("SLS 1: Custom", 0.0, 0.0, "SLS")
         ]
         return cls(uls_cases=uls_cases, sls_cases=sls_cases)
 
@@ -191,15 +217,44 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
 
     parent = container if container is not None else st
 
+    # Standard options
+    STANDARDS = {
+        "CWCT TU 14": LoadCaseSet.create_cwct_tu14_defaults,
+        "BS EN 1990": LoadCaseSet.create_en1990_defaults,
+        "SBC-301": LoadCaseSet.create_sbc301_defaults,
+        "Custom": LoadCaseSet.create_blank
+    }
+
     # Initialize session state for load cases if not present
+    if "load_case_standard" not in st.session_state:
+        st.session_state.load_case_standard = "CWCT TU 14"
+    
     if "load_case_set" not in st.session_state:
-        st.session_state.load_case_set = LoadCaseSet.create_en1990_defaults()
+        st.session_state.load_case_set = LoadCaseSet.create_cwct_tu14_defaults()
     
     if "uls_cases_df" not in st.session_state:
         st.session_state.uls_cases_df = st.session_state.load_case_set.get_uls_dataframe()
     
     if "sls_cases_df" not in st.session_state:
         st.session_state.sls_cases_df = st.session_state.load_case_set.get_sls_dataframe()
+    
+    # Standard selector (outside form so it updates immediately)
+    selected_standard = parent.selectbox(
+        "Load Case Standard",
+        options=list(STANDARDS.keys()),
+        index=list(STANDARDS.keys()).index(st.session_state.load_case_standard),
+        key=f"{key_prefix}_standard_select",
+        help="Select a load case standard or choose Custom to define your own"
+    )
+    
+    # If standard changed, update the dataframes
+    if selected_standard != st.session_state.load_case_standard:
+        st.session_state.load_case_standard = selected_standard
+        new_load_case_set = STANDARDS[selected_standard]()
+        st.session_state.load_case_set = new_load_case_set
+        st.session_state.uls_cases_df = new_load_case_set.get_uls_dataframe()
+        st.session_state.sls_cases_df = new_load_case_set.get_sls_dataframe()
+        st.rerun()
     
     # Wrap both data editors in a form to prevent reruns during editing
     with parent.form(key=f"{key_prefix}_form"):
@@ -210,7 +265,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
         edited_uls = parent.data_editor(
             st.session_state.uls_cases_df,
             num_rows="dynamic",
-            width="stretch",
+            use_container_width=True,
             key=f"{key_prefix}_uls_editor",
             column_config={
                 "Load Case": st.column_config.TextColumn(
@@ -251,7 +306,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
         edited_sls = parent.data_editor(
             st.session_state.sls_cases_df,
             num_rows="dynamic",
-            width="stretch",
+            use_container_width=True,
             key=f"{key_prefix}_sls_editor",
             column_config={
                 "Load Case": st.column_config.TextColumn(
@@ -285,7 +340,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
         parent.caption(f"{len(edited_sls)} SLS load case(s) defined")
         
         # Submit button for the form
-        submitted = parent.form_submit_button("✓ Apply Load Cases", width="stretch")
+        submitted = parent.form_submit_button("✓ Apply Load Cases", use_container_width=True)
     
     # Only update session state when form is submitted
     if submitted:
