@@ -15,7 +15,7 @@ authenticate_user()
 st.set_page_config(page_title="TT Mullion Sizing App")
 st.title("TT Mullion Sizing App")
 
-# Layout example: put geometry and material side-by-side, loads on a second row
+# INPUTS
 st.header("Geometry")
 geom = geometry_ui(container=st, key_prefix="main_geom", default_span_mm=4000, default_bay_width_mm=3000)
 st.markdown("---")
@@ -122,12 +122,7 @@ st.markdown("---")
 def cached_uls_analysis(
     span_mm: float,
     bay_width_mm: float,
-    loading_inputs_hash: str,
-    load_cases_hash: str,
-    _geom,
-    _loading_inputs,
-    _load_case_set
-):
+    loading_inputs_hash: str, load_cases_hash: str, _geom, _loading_inputs, _load_case_set):
     """
     Cached ULS analysis with hashable parameters.
     Uses simple values for cache key, passes objects for computation.
@@ -150,9 +145,7 @@ def cached_sls_analysis(
     Cached SLS analysis with hashable parameters.
     Uses simple values for cache key, passes objects for computation.
     """
-    return analyze_sls_deflection_requirement(
-        _geom, _loading_inputs, _load_case_set, E, deflection_limit_mm
-    )
+    return analyze_sls_deflection_requirement(_geom, _loading_inputs, _load_case_set, E, deflection_limit_mm)
 
 # ========== ANALYSIS ==========
 st.header("Results")
@@ -219,8 +212,6 @@ with col3:
         help="Z_req = M_max / σ_allow"
     )
 
-st.markdown("---")
-
 # Reactions table
 st.markdown("#### Reactions for All ULS Cases")
 reaction_data = []
@@ -234,8 +225,6 @@ for case_name, case_data in uls_results['cases'].items():
     })
 
 st.dataframe(reaction_data, width='stretch', hide_index=True)
-
-st.markdown("---")
 
 # Shear Force Diagram with dropdown
 st.markdown("#### Shear Force Diagram")
@@ -283,8 +272,6 @@ with col1:
     st.metric("Max V (this case)", f"{V_data['V_max_N']/1000:.2f} kN")
 with col2:
     st.metric("Location", f"{V_data['x_Vmax_m']:.3f} m")
-
-st.markdown("---")
 
 # Bending Moment Diagram with dropdown
 st.markdown("#### Bending Moment Diagram")
@@ -366,8 +353,6 @@ with col3:
         gov_sls_case,
         help="SLS case requiring largest I"
     )
-
-st.markdown("---")
 
 # Detailed SLS results table
 st.markdown("#### All SLS Cases - Required I")
