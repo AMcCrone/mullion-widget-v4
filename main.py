@@ -1,4 +1,5 @@
 import streamlit as st
+from auth import authenticate_user
 from inputs.geometry import geometry_ui
 from inputs.material import material_ui, MaterialType
 from inputs.loading import loading_ui, loading_diagram_ui, beam_model_diagram_ui
@@ -8,6 +9,8 @@ from analysis.section_selection import section_selection_ui
 
 import plotly.graph_objects as go
 import numpy as np
+
+authenticate_user()
 
 st.set_page_config(page_title="TT Mullion Sizing App")
 st.title("TT Mullion Sizing App")
