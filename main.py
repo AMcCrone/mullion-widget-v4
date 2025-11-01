@@ -1,4 +1,5 @@
 import streamlit as st
+import st_yled
 from auth import authenticate_user
 from inputs.geometry import geometry_ui
 from inputs.material import material_ui, MaterialType
@@ -373,7 +374,7 @@ st.markdown("---")
 # ========================================
 # FINAL DESIGN SUMMARY
 # ========================================
-with st.container(border=True):
+with st_yled.container(background_color="#f8f9fa", border_color="#dee2e6"):
     st.header("Design Summary")
     st.markdown("""
     Select a section with properties that meet or exceed the following requirements:
