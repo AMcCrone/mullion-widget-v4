@@ -376,7 +376,7 @@ st.markdown("---")
 # ========================================
 # FINAL DESIGN SUMMARY
 # ========================================
-with st_yled.container(background_color="#f8f9fa", border_color="#dee2e6"):
+with st_yled.container(background_color="rgb(0,163,173)"):
     st.header("Design Summary")
     st.markdown("""
     Select a section with properties that meet or exceed the following requirements:
