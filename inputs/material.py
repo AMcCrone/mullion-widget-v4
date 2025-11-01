@@ -108,11 +108,11 @@ def material_ui(container=None, key_prefix: str = "mat",
         parent.markdown("Enter custom properties:")
         col1, col2, col3 = parent.columns(3)
         with col1:
-            E = parent.number_input("E (Pa)", value=float(_get_default(f"{key_prefix}_E", 69e9 if mtype == MaterialType.ALUMINIUM else 210e9)), format="%.2e", key=f"{key_prefix}_E_widget")
+            E = parent.number_input("E (Pa)", value=float(_get_default(f"{key_prefix}_E", 70e9 if mtype == MaterialType.ALUMINIUM else 210e9)), format="%.2e", key=f"{key_prefix}_E_widget")
         with col2:
             density = parent.number_input("Density (kg/m³)", value=float(_get_default(f"{key_prefix}_density", 2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0)), format="%.0f", key=f"{key_prefix}_density_widget")
         with col3:
-            fy = parent.number_input("fy (Pa)", value=float(_get_default(f"{key_prefix}_fy", 155e6 if mtype == MaterialType.ALUMINIUM else 275e6)), format="%.2e", key=f"{key_prefix}_fy_widget")
+            fy = parent.number_input("fy (Pa)", value=float(_get_default(f"{key_prefix}_fy", 160e6 if mtype == MaterialType.ALUMINIUM else 275e6)), format="%.2e", key=f"{key_prefix}_fy_widget")
 
         # save to session
         st.session_state.inputs[f"{key_prefix}_E"] = E
@@ -128,9 +128,9 @@ def material_ui(container=None, key_prefix: str = "mat",
             parent.error("Selected grade not found; switch to Custom to enter properties.")
             # fallback
             mat = Material(material_type=mtype, grade="CustomFallback",
-                           E=69e9 if mtype == MaterialType.ALUMINIUM else 210e9,
+                           E=70e9 if mtype == MaterialType.ALUMINIUM else 210e9,
                            density=2700.0 if mtype == MaterialType.ALUMINIUM else 7850.0,
-                           fy=155e6 if mtype == MaterialType.ALUMINIUM else 275e6)
+                           fy=160e6 if mtype == MaterialType.ALUMINIUM else 275e6)
 
     # Save primary selections to session_state for persistence
     st.session_state.inputs[f"{key_prefix}_type"] = mtype
