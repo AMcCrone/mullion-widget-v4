@@ -25,7 +25,7 @@ authenticate_user()
 st.set_page_config(page_title="TT Mullion Sizing App")
 col1, col2, col3 = st.columns([1, 5.6, 1])
 with col2:
-    st.image("educational/images/TT_Logo_Colour.svg", width=450)
+    st.image("images/TT_Logo_Colour.svg", width=450)
     st.title("Mullion Sizing App")
 
 # INPUTS
