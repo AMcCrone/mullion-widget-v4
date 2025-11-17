@@ -23,7 +23,7 @@ TT_Grey = 'rgb(99,102,105)'
 authenticate_user()
 
 st.set_page_config(page_title="TT Mullion Sizing App")
-col1, col2, col3 = st.columns([1, 3.6, 1])
+col1, col2, col3 = st.columns([1, 3, 1])
 with col2:
     st.image("images/TT_Logo_Colour.svg", width=450)
     st.title("Mullion Sizing App")
