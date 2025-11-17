@@ -1,5 +1,23 @@
+# .streamlit/config.toml
 [theme]
-base="light"
-primaryColor="#db451d"
-secondaryBackgroundColor="#e7f8f9"
-textColor="#00303c"
+# keep the app default base as light
+base = "light"
+font="Raleway:https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap, sans-serif"
+
+# default (light) colors
+primaryColor = "#db451d"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#e9e8e0"
+textColor = "#00303c"
+
+[theme.light]
+primaryColor = "#db451d"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#e9e8e0"
+textColor = "#00303c"
+
+[theme.dark]
+primaryColor = "#ff7a3d"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#0f1724"
+textColor = "#E6EEF2"
