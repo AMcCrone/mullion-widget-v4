@@ -720,7 +720,7 @@ def section_selection_ui(
     n_pass = len(df_display[df_display['ULS Util.'].str.rstrip('%').astype(float) <= 100])
     n_fail = len(df_display) - n_pass
     
-    sum_col1, sum_col2, sum_col3 = parent.columns(3)
+    sum_col1, sum_col2, sum_col3 = parent.columns([1,1,2])
     
     with sum_col1:
         parent.metric("Sections Passing", f"{n_pass}", 
@@ -736,12 +736,3 @@ def section_selection_ui(
             parent.success(f"✅ {recommended}")
         else:
             parent.warning("⚠️ No suitable sections")
-    
-    # Legend
-    parent.caption("""
-    **Legend:**
-    - 🟢 Green background = Section passes both ULS and SLS
-    - 🔴 Red background = Section fails ULS or SLS
-    - ⬜ Square markers = Reinforced sections
-    - ⚫ Circle markers = Unreinforced sections
-    """)
