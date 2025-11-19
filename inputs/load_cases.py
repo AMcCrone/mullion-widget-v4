@@ -134,7 +134,18 @@ class LoadCaseSet:
             'Wind Factor': [1.0, 0.0],
             'Barrier Factor': [0.0, 1.0]
         })
-    
+
+        @classmethod
+    def create_simple(cls) -> "LoadCaseSet":
+        """Create simple LoadCaseSet for basic analysis"""
+        uls_cases = [
+            LoadCombination("ULS 1: Custom", 1.0, 1.0, "ULS")
+        ]
+        sls_cases = [
+            LoadCombination("SLS 1: Custom", 1.0, 1.0, "SLS")
+        ]
+        return cls(uls_cases=uls_cases, sls_cases=sls_cases)
+        
     @classmethod
     def create_cwct_tu14_defaults(cls) -> "LoadCaseSet":
         """Create LoadCaseSet with CWCT TU 14 default cases"""
