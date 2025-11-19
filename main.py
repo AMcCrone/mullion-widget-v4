@@ -11,7 +11,7 @@ from outputs.json_download import create_design_json, add_json_download_button
 
 import plotly.graph_objects as go
 import numpy as np
-# Initialize st_yled
+# Initialize st_yled 
 st_yled.init()
 
 TT_LightBlue = 'rgba(136,219,223, 0.3)'
