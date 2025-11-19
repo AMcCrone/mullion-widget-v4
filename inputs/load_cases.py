@@ -233,6 +233,7 @@ def load_cases_ui(container=None, key_prefix: str = "loadcase") -> LoadCaseSet:
         "CWCT TU 14": LoadCaseSet.create_cwct_tu14_defaults,
         "BS EN 1990": LoadCaseSet.create_en1990_defaults,
         "SBC-301": LoadCaseSet.create_sbc301_defaults,
+        "Simple": LoadCaseSet.create_simple,
         "Custom": LoadCaseSet.create_blank
     }
 
