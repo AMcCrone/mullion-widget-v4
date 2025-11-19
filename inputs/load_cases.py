@@ -135,7 +135,7 @@ class LoadCaseSet:
             'Barrier Factor': [0.0, 1.0]
         })
 
-        @classmethod
+    @classmethod
     def create_simple(cls) -> "LoadCaseSet":
         """Create simple LoadCaseSet for basic analysis"""
         uls_cases = [
