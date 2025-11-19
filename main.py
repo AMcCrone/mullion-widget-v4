@@ -342,7 +342,7 @@ st.subheader("Serviceability Limit State (SLS)")
 st.markdown("#### Deflection Requirements")
 
 # Summary of SLS results
-col1, col2, col3 = st.columns(1,1,2)
+col1, col2, col3 = st.columns([1,1,2])
 
 with col1:
     st.metric(
