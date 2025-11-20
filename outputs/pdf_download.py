@@ -126,7 +126,7 @@ class MullionDesignReport:
     def _create_table(self, data, col_widths=None, style_commands=None):
         """Create a formatted table with consistent styling."""
         default_style = [
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e8eef7')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9e8e0')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1f4788')),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -137,8 +137,10 @@ class MullionDesignReport:
             ('TOPPADDING', (0, 0), (-1, 0), 8),
             ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
             ('TOPPADDING', (0, 1), (-1, -1), 6),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')])
+            ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#1f4788')),
+            ('LINEBELOW', (0, 0), (-1, 0), 1.0, colors.HexColor('#1f4788')),
+            ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#1f4788')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f4ed')])
         ]
         
         if style_commands:
@@ -156,9 +158,7 @@ class MullionDesignReport:
         data = [
             ['Parameter', 'Value', 'Units'],
             ['Span', f"{geom['span_mm']:.0f}", 'mm'],
-            ['', f"{geom['span_m']:.3f}", 'm'],
             ['Bay Width', f"{geom['bay_width_mm']:.0f}", 'mm'],
-            ['', f"{geom['bay_width_m']:.3f}", 'm'],
             ['Tributary Area', f"{geom['tributary_area_m2']:.3f}", 'm²']
         ]
         
@@ -176,9 +176,7 @@ class MullionDesignReport:
             ['Material Type', mat['type'], ''],
             ['Grade', mat['grade'], ''],
             ['Elastic Modulus (E)', f"{mat['elastic_modulus_GPa']:.1f}", 'GPa'],
-            ['', f"{mat['elastic_modulus_Pa']:.2e}", 'Pa'],
             ['Yield Strength (fy)', f"{mat['yield_strength_MPa']:.1f}", 'MPa'],
-            ['', f"{mat['yield_strength_Pa']:.2e}", 'Pa'],
             ['Density', f"{mat['density_kg_m3']:.0f}", 'kg/m³']
         ]
         
@@ -200,7 +198,6 @@ class MullionDesignReport:
         if loading['include_wind']:
             wind_data.extend([
                 ['Wind Pressure', f"{loading['wind_pressure_kPa']:.2f}", 'kPa'],
-                ['', f"{loading['wind_pressure_Pa']:.0f}", 'Pa']
             ])
         
         table = self._create_table(wind_data, col_widths=[120*mm, 50*mm, 30*mm])
@@ -215,7 +212,6 @@ class MullionDesignReport:
         if loading['include_barrier']:
             barrier_data.extend([
                 ['Barrier Load', f"{loading['barrier_load_kN_m']:.2f}", 'kN/m'],
-                ['', f"{loading['barrier_load_N_m']:.0f}", 'N/m'],
                 ['Barrier Height', f"{loading['barrier_height_mm']:.0f}", 'mm']
             ])
         
