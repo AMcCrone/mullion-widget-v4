@@ -53,7 +53,7 @@ class MullionDesignReport:
                 name='SectionHeading',
                 parent=self.styles['Heading1'],
                 fontSize=14,
-                textColor=colors.HexColor('#1f4788'),
+                textColor=colors.HexColor('#db451d'),
                 spaceAfter=8,
                 spaceBefore=12,
                 fontName='Helvetica-Bold',
@@ -68,7 +68,7 @@ class MullionDesignReport:
                 name='SubsectionHeading',
                 parent=self.styles['Heading2'],
                 fontSize=11,
-                textColor=colors.HexColor('#2c5aa0'),
+                textColor=colors.HexColor('#db451d'),
                 spaceAfter=6,
                 spaceBefore=8,
                 fontName='Helvetica-Bold'
@@ -97,27 +97,27 @@ class MullionDesignReport:
         canvas.saveState()
         
         # Header
-        canvas.setStrokeColor(colors.HexColor('#1f4788'))
-        canvas.setLineWidth(2)
+        canvas.setStrokeColor(colors.grey)
+        canvas.setLineWidth(1)
         canvas.line(30, self.page_height - 40, self.page_width - 30, self.page_height - 40)
         
-        canvas.setFont('Helvetica-Bold', 12)
-        canvas.setFillColor(colors.HexColor('#1f4788'))
+        canvas.setFont('Helvetica-Bold', 8)
+        canvas.setFillColor(colors.grey)
         canvas.drawString(30, self.page_height - 32, "Mullion Design Calculation Report")
         
-        canvas.setFont('Helvetica', 9)
+        canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.grey)
         date_str = datetime.now().strftime("%B %d, %Y")
         canvas.drawRightString(self.page_width - 30, self.page_height - 32, date_str)
         
         # Footer
-        canvas.setStrokeColor(colors.HexColor('#1f4788'))
+        canvas.setStrokeColor(colors.grey)
         canvas.setLineWidth(1)
         canvas.line(30, 40, self.page_width - 30, 40)
         
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.grey)
-        canvas.drawString(30, 30, self.data['metadata']['app_name'])
+        canvas.drawString(30, 30, "Thornton Tomasetti")
         canvas.drawCentredString(self.page_width / 2, 30, f"Page {doc.page}")
         canvas.drawRightString(self.page_width - 30, 30, f"Version {self.data['metadata']['version']}")
         
@@ -137,9 +137,9 @@ class MullionDesignReport:
             ('TOPPADDING', (0, 0), (-1, 0), 8),
             ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
             ('TOPPADDING', (0, 1), (-1, -1), 6),
-            ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#1f4788')),
-            ('LINEBELOW', (0, 0), (-1, 0), 1.0, colors.HexColor('#1f4788')),
-            ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#1f4788')),
+            ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#8b9064')),
+            ('LINEBELOW', (0, 0), (-1, 0), 1.0, colors.HexColor('#8b9064')),
+            ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#8b9064')),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f4ed')])
         ]
         
