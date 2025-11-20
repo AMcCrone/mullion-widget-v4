@@ -8,6 +8,7 @@ from inputs.load_cases import load_cases_ui
 from analysis.beam_analysis import analyze_uls_cases, analyze_sls_deflection_requirement, compute_required_section_modulus
 from analysis.section_selection import section_selection_ui
 from outputs.json_download import create_design_json, add_json_download_button
+from outputs.pdf_download import add_pdf_download_button
 
 import plotly.graph_objects as go
 import numpy as np
@@ -436,3 +437,6 @@ design_json = create_design_json(
 
 # Add download button to sidebar
 add_json_download_button(design_json)
+
+# Add PDF download button to sidebar
+add_pdf_download_button(design_json)
