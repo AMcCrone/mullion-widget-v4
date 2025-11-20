@@ -36,60 +36,61 @@ class MullionDesignReport:
         
     def _setup_custom_styles(self):
         """Create custom paragraph styles for the report."""
-        # Title style
-        self.styles.add(ParagraphStyle(
-            name='CustomTitle',
-            parent=self.styles['Title'],
-            fontSize=18,
-            textColor=colors.HexColor('#1f4788'),
-            spaceAfter=12,
-            alignment=TA_CENTER,
-            fontName='Helvetica-Bold'
-        ))
+        # Only add styles if they don't already exist
+        if 'CustomTitle' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='CustomTitle',
+                parent=self.styles['Title'],
+                fontSize=18,
+                textColor=colors.HexColor('#1f4788'),
+                spaceAfter=12,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold'
+            ))
         
-        # Section heading
-        self.styles.add(ParagraphStyle(
-            name='SectionHeading',
-            parent=self.styles['Heading1'],
-            fontSize=14,
-            textColor=colors.HexColor('#1f4788'),
-            spaceAfter=8,
-            spaceBefore=12,
-            fontName='Helvetica-Bold',
-            borderWidth=0,
-            borderColor=colors.HexColor('#1f4788'),
-            borderPadding=2,
-            borderRadius=0,
-        ))
+        if 'SectionHeading' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='SectionHeading',
+                parent=self.styles['Heading1'],
+                fontSize=14,
+                textColor=colors.HexColor('#1f4788'),
+                spaceAfter=8,
+                spaceBefore=12,
+                fontName='Helvetica-Bold',
+                borderWidth=0,
+                borderColor=colors.HexColor('#1f4788'),
+                borderPadding=2,
+                borderRadius=0,
+            ))
         
-        # Subsection heading
-        self.styles.add(ParagraphStyle(
-            name='SubsectionHeading',
-            parent=self.styles['Heading2'],
-            fontSize=11,
-            textColor=colors.HexColor('#2c5aa0'),
-            spaceAfter=6,
-            spaceBefore=8,
-            fontName='Helvetica-Bold'
-        ))
+        if 'SubsectionHeading' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='SubsectionHeading',
+                parent=self.styles['Heading2'],
+                fontSize=11,
+                textColor=colors.HexColor('#2c5aa0'),
+                spaceAfter=6,
+                spaceBefore=8,
+                fontName='Helvetica-Bold'
+            ))
         
-        # Body text
-        self.styles.add(ParagraphStyle(
-            name='BodyText',
-            parent=self.styles['Normal'],
-            fontSize=10,
-            spaceAfter=6,
-            fontName='Helvetica'
-        ))
+        if 'CustomBodyText' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='CustomBodyText',
+                parent=self.styles['Normal'],
+                fontSize=10,
+                spaceAfter=6,
+                fontName='Helvetica'
+            ))
         
-        # Footer text
-        self.styles.add(ParagraphStyle(
-            name='Footer',
-            parent=self.styles['Normal'],
-            fontSize=8,
-            textColor=colors.grey,
-            alignment=TA_CENTER
-        ))
+        if 'FooterText' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='FooterText',
+                parent=self.styles['Normal'],
+                fontSize=8,
+                textColor=colors.grey,
+                alignment=TA_CENTER
+            ))
     
     def _header_footer(self, canvas, doc):
         """Add header and footer to each page."""
@@ -481,28 +482,3 @@ def add_pdf_download_button(
         mime="application/pdf",
         help="Download complete design calculation report as PDF"
     )
-
-
-# Example usage in your main Streamlit app:
-"""
-# After all analysis is complete, add this to create the PDF download:
-
-# Create the design data JSON
-design_json = create_design_json(
-    geom=geom,
-    mat=mat,
-    loading_inputs=loading_inputs,
-    load_case_set=load_case_set,
-    deflection_limit_mm=deflection_limit_mm,
-    deflection_criteria=deflection_criteria,
-    safety_factor=safety_factor,
-    sigma_allow_Pa=sigma_allow_Pa,
-    uls_results=uls_results,
-    sls_results=sls_results,
-    Z_req=Z_req,
-    I_req=I_req
-)
-
-# Add PDF download button to sidebar
-add_pdf_download_button(design_json)
-"""
