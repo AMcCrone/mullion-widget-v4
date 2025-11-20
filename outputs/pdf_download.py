@@ -42,7 +42,7 @@ class MullionDesignReport:
                 name='CustomTitle',
                 parent=self.styles['Title'],
                 fontSize=18,
-                textColor=colors.HexColor('#1f4788'),
+                textColor=colors.black,
                 spaceAfter=12,
                 alignment=TA_CENTER,
                 fontName='Helvetica-Bold'
@@ -127,7 +127,7 @@ class MullionDesignReport:
         """Create a formatted table with consistent styling."""
         default_style = [
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9e8e0')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1f4788')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
@@ -138,7 +138,7 @@ class MullionDesignReport:
             ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
             ('TOPPADDING', (0, 1), (-1, -1), 6),
             ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#8b9064')),
-            ('LINEBELOW', (0, 0), (-1, 0), 1.0, colors.HexColor('#8b9064')),
+            ('LINEBELOW', (0, 0), (-1, 0), 0.7, colors.HexColor('#8b9064')),
             ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#8b9064')),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f4ed')])
         ]
