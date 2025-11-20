@@ -332,7 +332,6 @@ class MullionDesignReport:
             ['Deflection Limit', f"{sls['deflection_limit_mm']:.2f}", 'mm'],
             ['Governing Case', sls['governing_case'], ''],
             ['Required I', f"{sls['required_I_cm4']:.2f}", 'cm⁴'],
-            ['', f"{sls['required_I_m4']:.4e}", 'm⁴']
         ]
         
         table = self._create_table(gov_data, col_widths=[120*mm, 50*mm, 30*mm])
@@ -364,15 +363,9 @@ class MullionDesignReport:
             ['Section Modulus (Z)',
              req['section_modulus']['governing_case'],
              f"{req['section_modulus']['required_cm3']:.2f}", 'cm³'],
-            ['',
-             '',
-             f"{req['section_modulus']['required_m3']:.4e}", 'm³'],
             ['Moment of Inertia (I)',
              req['moment_of_inertia']['governing_case'],
              f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm⁴'],
-            ['',
-             '',
-             f"{req['moment_of_inertia']['required_m4']:.4e}", 'm⁴']
         ]
         
         table = self._create_table(data, col_widths=[60*mm, 60*mm, 45*mm, 35*mm])
