@@ -28,6 +28,8 @@ with col2:
     st.image("images/TT_Logo_Colour.svg", width=450)
     st.title("Mullion Sizing App")
 
+st.sidebar.image("images/TT_Logo_Colour.svg", width=180, output_format="PNG")
+
 # INPUTS
 st.header("Geometry")
 geom = geometry_ui(container=st, key_prefix="main_geom", default_span_mm=4000, default_bay_width_mm=3000)
