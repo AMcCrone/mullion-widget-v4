@@ -13,6 +13,8 @@ from reportlab.platypus import (
     PageBreak, KeepTogether, Image
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import os
 
 
@@ -40,7 +42,36 @@ class MullionDesignReport:
         self.right_margin = 30
         self.content_width = self.page_width - self.left_margin - self.right_margin
         self.styles = getSampleStyleSheet()
+        self._register_fonts()
         self._setup_custom_styles()
+    
+    def _register_fonts(self):
+        """Register custom Raleway fonts."""
+        font_dir = "fonts"  # Directory where your font files are stored
+        
+        # Define font paths - adjust these based on your font file names
+        fonts_to_register = [
+            ('Raleway', 'Raleway-Regular.ttf'),
+            ('Raleway-Bold', 'Raleway-Bold.ttf'),
+            ('Raleway-Italic', 'Raleway-Italic.ttf'),
+            ('Raleway-BoldItalic', 'Raleway-BoldItalic.ttf'),
+        ]
+        
+        # Register each font if the file exists
+        for font_name, font_file in fonts_to_register:
+            font_path = os.path.join(font_dir, font_file)
+            if os.path.exists(font_path):
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                except Exception as e:
+                    print(f"Warning: Could not register font {font_name}: {e}")
+            else:
+                print(f"Warning: Font file not found: {font_path}")
+        
+        # Fallback to Helvetica if Raleway not available
+        self.font_regular = 'Raleway' if os.path.exists(os.path.join(font_dir, 'Raleway-Regular.ttf')) else 'Helvetica'
+        self.font_bold = 'Raleway-Bold' if os.path.exists(os.path.join(font_dir, 'Raleway-Bold.ttf')) else 'Helvetica-Bold'
+        self.font_italic = 'Raleway-Italic' if os.path.exists(os.path.join(font_dir, 'Raleway-Italic.ttf')) else 'Helvetica-Oblique'
         
     def _setup_custom_styles(self):
         """Create custom paragraph styles for the report."""
@@ -53,7 +84,7 @@ class MullionDesignReport:
                 textColor=colors.black,
                 spaceAfter=12,
                 alignment=TA_CENTER,
-                fontName='Helvetica-Bold'
+                fontName=self.font_bold
             ))
         
         if 'SectionHeading' not in self.styles:
@@ -64,7 +95,7 @@ class MullionDesignReport:
                 textColor=colors.HexColor('#db451d'),
                 spaceAfter=8,
                 spaceBefore=12,
-                fontName='Helvetica-Bold',
+                fontName=self.font_bold,
                 borderWidth=0,
                 borderColor=colors.HexColor('#1f4788'),
                 borderPadding=2,
@@ -79,7 +110,7 @@ class MullionDesignReport:
                 textColor=colors.HexColor('#db451d'),
                 spaceAfter=6,
                 spaceBefore=8,
-                fontName='Helvetica-Bold'
+                fontName=self.font_bold
             ))
         
         if 'CustomBodyText' not in self.styles:
@@ -88,7 +119,7 @@ class MullionDesignReport:
                 parent=self.styles['Normal'],
                 fontSize=10,
                 spaceAfter=6,
-                fontName='Helvetica'
+                fontName=self.font_regular
             ))
         
         if 'FooterText' not in self.styles:
@@ -97,7 +128,8 @@ class MullionDesignReport:
                 parent=self.styles['Normal'],
                 fontSize=8,
                 textColor=colors.grey,
-                alignment=TA_CENTER
+                alignment=TA_CENTER,
+                fontName=self.font_regular
             ))
     
     def _header_footer(self, canvas, doc):
@@ -110,7 +142,7 @@ class MullionDesignReport:
         canvas.line(self.left_margin, self.page_height - 40, 
                    self.page_width - self.right_margin, self.page_height - 40)
         
-        canvas.setFont('Helvetica-Bold', 8)
+        canvas.setFont(self.font_bold, 8)
         canvas.setFillColor(colors.grey)
         
         # Header text with optional project name
@@ -120,7 +152,7 @@ class MullionDesignReport:
             header_text = "Mullion Design Calculation Report"
         canvas.drawString(self.left_margin, self.page_height - 32, header_text)
         
-        canvas.setFont('Helvetica', 8)
+        canvas.setFont(self.font_regular, 8)
         canvas.setFillColor(colors.grey)
         date_str = datetime.now().strftime("%B %d, %Y")
         canvas.drawRightString(self.page_width - self.right_margin, self.page_height - 32, date_str)
@@ -130,7 +162,7 @@ class MullionDesignReport:
         canvas.setLineWidth(1)
         canvas.line(self.left_margin, 40, self.page_width - self.right_margin, 40)
         
-        canvas.setFont('Helvetica', 8)
+        canvas.setFont(self.font_regular, 8)
         canvas.setFillColor(colors.grey)
         
         # Try to add logo, fallback to text if logo not found
