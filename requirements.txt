@@ -5,4 +5,3 @@ plotly
 openpyxl
 st-styled
 reportlab
-svglib
