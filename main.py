@@ -449,16 +449,15 @@ project_name = st.sidebar.text_input(
     placeholder="e.g., City Tower Facade"
 )
 
-# Download buttons
-add_pdf_download_button(
-    design_data=design_data,
-    project_name=project_name if project_name else None
-)
-
-# If you have a JSON download button too:
-st.sidebar.download_button(
-    label="💾 Download JSON",
-    data=json.dumps(design_data, indent=2),
-    file_name="mullion_design.json",
-    mime="application/json"
-)
+# Only show download button if design_data exists
+if 'design_data' in locals() or 'design_data' in st.session_state:
+    # Get design_data from wherever it's stored
+    if 'design_data' in st.session_state:
+        design_data = st.session_state.design_data
+    
+    add_pdf_download_button(
+        design_data=design_data,
+        project_name=project_name if project_name else None
+    )
+else:
+    st.sidebar.info("Complete the design inputs to generate report")
