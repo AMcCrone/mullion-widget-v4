@@ -435,6 +435,9 @@ design_json = create_design_json(
     I_req=I_req
 )
 
+# Store it in session state
+st.session_state.design_data = design_data
+
 # Add download button to sidebar
 add_json_download_button(design_json)
 
@@ -449,15 +452,11 @@ project_name = st.sidebar.text_input(
     placeholder="e.g., City Tower Facade"
 )
 
-# Only show download button if design_data exists
-if 'design_data' in locals() or 'design_data' in st.session_state:
-    # Get design_data from wherever it's stored
-    if 'design_data' in st.session_state:
-        design_data = st.session_state.design_data
-    
+# Download button - only show if data exists
+if hasattr(st.session_state, 'design_data'):
     add_pdf_download_button(
-        design_data=design_data,
+        design_data=st.session_state.design_data,
         project_name=project_name if project_name else None
     )
 else:
-    st.sidebar.info("Complete the design inputs to generate report")
+    st.sidebar.info("📊 Complete the design to download report")
