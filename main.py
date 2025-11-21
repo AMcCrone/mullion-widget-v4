@@ -438,5 +438,27 @@ design_json = create_design_json(
 # Add download button to sidebar
 add_json_download_button(design_json)
 
-# Add PDF download button to sidebar
-add_pdf_download_button(design_json)
+# In your sidebar section
+st.sidebar.header("Export Options")
+
+# Project name input
+project_name = st.sidebar.text_input(
+    "Project Name (Optional)",
+    value="",
+    help="Enter a project name to include in the PDF report header",
+    placeholder="e.g., City Tower Facade"
+)
+
+# Download buttons
+add_pdf_download_button(
+    design_data=design_data,
+    project_name=project_name if project_name else None
+)
+
+# If you have a JSON download button too:
+st.sidebar.download_button(
+    label="💾 Download JSON",
+    data=json.dumps(design_data, indent=2),
+    file_name="mullion_design.json",
+    mime="application/json"
+)
