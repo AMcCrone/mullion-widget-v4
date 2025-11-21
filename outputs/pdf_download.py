@@ -472,7 +472,7 @@ class MullionDesignReport:
             "<b>Section Selection:</b> Select a mullion section with properties equal to or "
             "exceeding the required values above. Ensure that both the section modulus (Z) "
             "and moment of inertia (I) requirements are satisfied.",
-            self.styles['BodyText']
+            self.styles['CustomBodyText']
         ))
     
     def generate(self):
@@ -497,17 +497,17 @@ class MullionDesignReport:
         report_date = datetime.fromisoformat(self.data['metadata']['report_generated'])
         story.append(Paragraph(
             f"<b>Report Generated:</b> {report_date.strftime('%B %d, %Y at %H:%M')}",
-            self.styles['BodyText']
+            self.styles['CustomBodyText']
         ))
         story.append(Paragraph(
             f"<b>Application:</b> {self.data['metadata']['app_name']} v{self.data['metadata']['version']}",
-            self.styles['BodyText']
+            self.styles['CustomBodyText']
         ))
         
         if self.project_name:
             story.append(Paragraph(
                 f"<b>Project:</b> {self.project_name}",
-                self.styles['BodyText']
+                self.styles['CustomBodyText']
             ))
         
         story.append(Spacer(1, 24))
