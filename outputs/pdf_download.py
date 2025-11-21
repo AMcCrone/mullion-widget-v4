@@ -422,7 +422,7 @@ class MullionDesignReport:
             ['Parameter', 'Value', 'Units'],
             ['Deflection Limit', f"{sls['deflection_limit_mm']:.2f}", 'mm'],
             ['Governing Case', sls['governing_case'], ''],
-            ['Required I', f"{sls['required_I_cm4']:.2f}", 'cm^4'],
+            ['Required I', f"{sls['required_I_cm4']:.2f}", 'cm⁴'],
         ]
         
         col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
@@ -431,7 +431,7 @@ class MullionDesignReport:
         story.append(Spacer(1, 8))
         
         story.append(Paragraph("7.2 All Load Cases", self.styles['SubsectionHeading']))
-        cases_data = [['Case', 'Required I (cm^4)', 'Unit Deflection (mm)']]
+        cases_data = [['Case', 'Required I (cm⁴)', 'Unit Deflection (mm)']]
         
         for case_name, case_data in sls['cases'].items():
             cases_data.append([
@@ -458,7 +458,7 @@ class MullionDesignReport:
              f"{req['section_modulus']['required_cm3']:.2f}", 'cm³'],
             ['Moment of Inertia (I)',
              req['moment_of_inertia']['governing_case'],
-             f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm^4'],
+             f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm⁴'],
         ]
         
         col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
