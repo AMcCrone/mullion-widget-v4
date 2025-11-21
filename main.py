@@ -435,8 +435,8 @@ design_json = create_design_json(
     I_req=I_req
 )
 
-# Store it in session state
-st.session_state.design_data = design_data
+# Store it in session state (use design_json, not design_data!)
+st.session_state.design_data = design_json
 
 # Add download button to sidebar
 add_json_download_button(design_json)
