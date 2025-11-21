@@ -49,11 +49,15 @@ class MullionDesignReport:
         """Register custom Raleway fonts."""
         font_dir = "fonts"  # Directory where your font files are stored
         
-        # Define font paths - adjust these based on your font file names
+        # Define font paths - register the weights we'll use
         fonts_to_register = [
-            ('Raleway', 'Raleway-Regular.ttf'),
+            ('Raleway-Regular', 'Raleway-Regular.ttf'),
+            ('Raleway-Medium', 'Raleway-Medium.ttf'),
+            ('Raleway-SemiBold', 'Raleway-SemiBold.ttf'),
             ('Raleway-Bold', 'Raleway-Bold.ttf'),
             ('Raleway-Italic', 'Raleway-Italic.ttf'),
+            ('Raleway-MediumItalic', 'Raleway-MediumItalic.ttf'),
+            ('Raleway-SemiBoldItalic', 'Raleway-SemiBoldItalic.ttf'),
             ('Raleway-BoldItalic', 'Raleway-BoldItalic.ttf'),
         ]
         
@@ -68,8 +72,10 @@ class MullionDesignReport:
             else:
                 print(f"Warning: Font file not found: {font_path}")
         
-        # Fallback to Helvetica if Raleway not available
-        self.font_regular = 'Raleway' if os.path.exists(os.path.join(font_dir, 'Raleway-Regular.ttf')) else 'Helvetica'
+        # Set font variables with fallback to Helvetica if Raleway not available
+        self.font_regular = 'Raleway-Regular' if os.path.exists(os.path.join(font_dir, 'Raleway-Regular.ttf')) else 'Helvetica'
+        self.font_medium = 'Raleway-Medium' if os.path.exists(os.path.join(font_dir, 'Raleway-Medium.ttf')) else 'Helvetica-Bold'
+        self.font_semibold = 'Raleway-SemiBold' if os.path.exists(os.path.join(font_dir, 'Raleway-SemiBold.ttf')) else 'Helvetica-Bold'
         self.font_bold = 'Raleway-Bold' if os.path.exists(os.path.join(font_dir, 'Raleway-Bold.ttf')) else 'Helvetica-Bold'
         self.font_italic = 'Raleway-Italic' if os.path.exists(os.path.join(font_dir, 'Raleway-Italic.ttf')) else 'Helvetica-Oblique'
         
@@ -84,7 +90,7 @@ class MullionDesignReport:
                 textColor=colors.black,
                 spaceAfter=12,
                 alignment=TA_CENTER,
-                fontName=self.font_bold
+                fontName=self.font_bold  # Use Bold for main title
             ))
         
         if 'SectionHeading' not in self.styles:
@@ -95,7 +101,7 @@ class MullionDesignReport:
                 textColor=colors.HexColor('#db451d'),
                 spaceAfter=8,
                 spaceBefore=12,
-                fontName=self.font_bold,
+                fontName=self.font_bold,  # Use Bold for section headings
                 borderWidth=0,
                 borderColor=colors.HexColor('#1f4788'),
                 borderPadding=2,
@@ -110,7 +116,7 @@ class MullionDesignReport:
                 textColor=colors.HexColor('#db451d'),
                 spaceAfter=6,
                 spaceBefore=8,
-                fontName=self.font_bold
+                fontName=self.font_semibold  # Use SemiBold for subsection headings
             ))
         
         if 'CustomBodyText' not in self.styles:
@@ -119,7 +125,7 @@ class MullionDesignReport:
                 parent=self.styles['Normal'],
                 fontSize=10,
                 spaceAfter=6,
-                fontName=self.font_regular
+                fontName=self.font_regular  # Use Regular for body text
             ))
         
         if 'FooterText' not in self.styles:
@@ -129,7 +135,7 @@ class MullionDesignReport:
                 fontSize=8,
                 textColor=colors.grey,
                 alignment=TA_CENTER,
-                fontName=self.font_regular
+                fontName=self.font_regular  # Use Regular for footer
             ))
     
     def _header_footer(self, canvas, doc):
@@ -142,7 +148,7 @@ class MullionDesignReport:
         canvas.line(self.left_margin, self.page_height - 40, 
                    self.page_width - self.right_margin, self.page_height - 40)
         
-        canvas.setFont(self.font_bold, 8)
+        canvas.setFont(self.font_semibold, 8)  # Use SemiBold for header
         canvas.setFillColor(colors.grey)
         
         # Header text with optional project name
@@ -203,9 +209,9 @@ class MullionDesignReport:
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9e8e0')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_bold),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_regular),
             ('FONTSIZE', (0, 1), (-1, -1), 9),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
             ('TOPPADDING', (0, 0), (-1, 0), 8),
