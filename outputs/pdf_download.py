@@ -1,7 +1,7 @@
 import io
 import json
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import streamlit as st
 
 from reportlab.lib import colors
@@ -10,15 +10,16 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, KeepTogether
+    PageBreak, KeepTogether, Image
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+import os
 
 
 class MullionDesignReport:
     """Generate a professional PDF report for mullion design calculations."""
     
-    def __init__(self, design_data: Dict[str, Any]):
+    def __init__(self, design_data: Dict[str, Any], project_name: Optional[str] = None):
         """
         Initialize the report generator.
         
@@ -26,11 +27,18 @@ class MullionDesignReport:
         ----------
         design_data : Dict[str, Any]
             Design data dictionary from create_design_json()
+        project_name : Optional[str]
+            Project name to display in header
         """
         self.data = design_data
+        self.project_name = project_name
         self.buffer = io.BytesIO()
         self.page_width = A4[0]
         self.page_height = A4[1]
+        # Define margins to match document
+        self.left_margin = 30
+        self.right_margin = 30
+        self.content_width = self.page_width - self.left_margin - self.right_margin
         self.styles = getSampleStyleSheet()
         self._setup_custom_styles()
         
@@ -99,27 +107,61 @@ class MullionDesignReport:
         # Header
         canvas.setStrokeColor(colors.grey)
         canvas.setLineWidth(1)
-        canvas.line(30, self.page_height - 40, self.page_width - 30, self.page_height - 40)
+        canvas.line(self.left_margin, self.page_height - 40, 
+                   self.page_width - self.right_margin, self.page_height - 40)
         
         canvas.setFont('Helvetica-Bold', 8)
         canvas.setFillColor(colors.grey)
-        canvas.drawString(30, self.page_height - 32, "Mullion Design Calculation Report")
+        
+        # Header text with optional project name
+        if self.project_name:
+            header_text = f"{self.project_name}: Mullion Design Calculation Report"
+        else:
+            header_text = "Mullion Design Calculation Report"
+        canvas.drawString(self.left_margin, self.page_height - 32, header_text)
         
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.grey)
         date_str = datetime.now().strftime("%B %d, %Y")
-        canvas.drawRightString(self.page_width - 30, self.page_height - 32, date_str)
+        canvas.drawRightString(self.page_width - self.right_margin, self.page_height - 32, date_str)
         
         # Footer
         canvas.setStrokeColor(colors.grey)
         canvas.setLineWidth(1)
-        canvas.line(30, 40, self.page_width - 30, 40)
+        canvas.line(self.left_margin, 40, self.page_width - self.right_margin, 40)
         
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.grey)
-        canvas.drawString(30, 30, "Thornton Tomasetti")
+        
+        # Try to add logo, fallback to text if logo not found
+        logo_path = "images/TT_Logo_Colour.svg"
+        if os.path.exists(logo_path):
+            try:
+                # For SVG, you might need to convert to PNG/JPG or use a different approach
+                # ReportLab has limited SVG support, so this might not work perfectly
+                # If SVG doesn't work, consider using PNG/JPG version of logo
+                from svglib.svglib import svg2rlg
+                from reportlab.graphics import renderPDF
+                
+                logo = svg2rlg(logo_path)
+                if logo:
+                    # Scale logo to appropriate size (adjust as needed)
+                    scale = 0.15  # Adjust this value to resize logo
+                    logo.width *= scale
+                    logo.height *= scale
+                    logo.scale(scale, scale)
+                    renderPDF.draw(logo, canvas, self.left_margin, 22)
+                else:
+                    canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
+            except:
+                # Fallback to text if SVG rendering fails
+                canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
+        else:
+            canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
+        
         canvas.drawCentredString(self.page_width / 2, 30, f"Page {doc.page}")
-        canvas.drawRightString(self.page_width - 30, 30, f"Version {self.data['metadata']['version']}")
+        canvas.drawRightString(self.page_width - self.right_margin, 30, 
+                              f"Version {self.data['metadata']['version']}")
         
         canvas.restoreState()
     
@@ -162,7 +204,9 @@ class MullionDesignReport:
             ['Tributary Area', f"{geom['tributary_area_m2']:.3f}", 'm²']
         ]
         
-        table = self._create_table(data, col_widths=[120*mm, 50*mm, 30*mm])
+        # Use content width for table
+        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        table = self._create_table(data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -180,7 +224,8 @@ class MullionDesignReport:
             ['Density', f"{mat['density_kg_m3']:.0f}", 'kg/m³']
         ]
         
-        table = self._create_table(data, col_widths=[120*mm, 50*mm, 30*mm])
+        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        table = self._create_table(data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -200,7 +245,8 @@ class MullionDesignReport:
                 ['Wind Pressure', f"{loading['wind_pressure_kPa']:.2f}", 'kPa'],
             ])
         
-        table = self._create_table(wind_data, col_widths=[120*mm, 50*mm, 30*mm])
+        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        table = self._create_table(wind_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 8))
         
@@ -215,7 +261,7 @@ class MullionDesignReport:
                 ['Barrier Height', f"{loading['barrier_height_mm']:.0f}", 'mm']
             ])
         
-        table = self._create_table(barrier_data, col_widths=[120*mm, 50*mm, 30*mm])
+        table = self._create_table(barrier_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -234,7 +280,8 @@ class MullionDesignReport:
                 f"{case['barrier_factor']:.2f}"
             ])
         
-        table = self._create_table(uls_data, col_widths=[80*mm, 60*mm, 60*mm])
+        col_widths = [self.content_width * 0.4, self.content_width * 0.3, self.content_width * 0.3]
+        table = self._create_table(uls_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 8))
         
@@ -247,7 +294,7 @@ class MullionDesignReport:
                 f"{case['barrier_factor']:.2f}"
             ])
         
-        table = self._create_table(sls_data, col_widths=[80*mm, 60*mm, 60*mm])
+        table = self._create_table(sls_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -266,7 +313,8 @@ class MullionDesignReport:
             ['Limit Ratio', f"span / {defl['limit_ratio']:.0f}", '']
         ]
         
-        table = self._create_table(defl_data, col_widths=[120*mm, 50*mm, 30*mm])
+        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        table = self._create_table(defl_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 8))
         
@@ -279,7 +327,7 @@ class MullionDesignReport:
             ['', f"{safety['allowable_stress_Pa']:.2e}", 'Pa']
         ]
         
-        table = self._create_table(safety_data, col_widths=[120*mm, 50*mm, 30*mm])
+        table = self._create_table(safety_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -300,7 +348,9 @@ class MullionDesignReport:
              f"{uls['governing_shear']['value_kN']:.2f}", 'kN']
         ]
         
-        table = self._create_table(gov_data, col_widths=[60*mm, 60*mm, 40*mm, 40*mm])
+        col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
+                     self.content_width * 0.2, self.content_width * 0.2]
+        table = self._create_table(gov_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 8))
         
@@ -316,7 +366,9 @@ class MullionDesignReport:
                 f"{case_data['V_max_kN']:.2f}"
             ])
         
-        table = self._create_table(cases_data, col_widths=[50*mm, 35*mm, 35*mm, 40*mm, 40*mm])
+        col_widths = [self.content_width * 0.25, self.content_width * 0.175, 
+                     self.content_width * 0.175, self.content_width * 0.2, self.content_width * 0.2]
+        table = self._create_table(cases_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -327,19 +379,21 @@ class MullionDesignReport:
         sls = self.data['sls_results']
         
         story.append(Paragraph("7.1 Governing Values", self.styles['SubsectionHeading']))
+        # Use superscript notation that renders correctly
         gov_data = [
             ['Parameter', 'Value', 'Units'],
             ['Deflection Limit', f"{sls['deflection_limit_mm']:.2f}", 'mm'],
             ['Governing Case', sls['governing_case'], ''],
-            ['Required I', f"{sls['required_I_cm4']:.2f}", 'cm⁴'],
+            ['Required I', f"{sls['required_I_cm4']:.2f}", 'cm^4'],
         ]
         
-        table = self._create_table(gov_data, col_widths=[120*mm, 50*mm, 30*mm])
+        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        table = self._create_table(gov_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 8))
         
         story.append(Paragraph("7.2 All Load Cases", self.styles['SubsectionHeading']))
-        cases_data = [['Case', 'Required I (cm⁴)', 'Unit Deflection (mm)']]
+        cases_data = [['Case', 'Required I (cm^4)', 'Unit Deflection (mm)']]
         
         for case_name, case_data in sls['cases'].items():
             cases_data.append([
@@ -348,7 +402,8 @@ class MullionDesignReport:
                 f"{case_data['unit_deflection_mm']:.3f}"
             ])
         
-        table = self._create_table(cases_data, col_widths=[80*mm, 60*mm, 60*mm])
+        col_widths = [self.content_width * 0.4, self.content_width * 0.3, self.content_width * 0.3]
+        table = self._create_table(cases_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
@@ -365,10 +420,12 @@ class MullionDesignReport:
              f"{req['section_modulus']['required_cm3']:.2f}", 'cm³'],
             ['Moment of Inertia (I)',
              req['moment_of_inertia']['governing_case'],
-             f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm⁴'],
+             f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm^4'],
         ]
         
-        table = self._create_table(data, col_widths=[60*mm, 60*mm, 45*mm, 35*mm])
+        col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
+                     self.content_width * 0.225, self.content_width * 0.175]
+        table = self._create_table(data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
         
@@ -385,8 +442,8 @@ class MullionDesignReport:
         doc = SimpleDocTemplate(
             self.buffer,
             pagesize=A4,
-            rightMargin=30,
-            leftMargin=30,
+            rightMargin=self.right_margin,
+            leftMargin=self.left_margin,
             topMargin=60,
             bottomMargin=60
         )
@@ -408,6 +465,13 @@ class MullionDesignReport:
             f"<b>Application:</b> {self.data['metadata']['app_name']} v{self.data['metadata']['version']}",
             self.styles['BodyText']
         ))
+        
+        if self.project_name:
+            story.append(Paragraph(
+                f"<b>Project:</b> {self.project_name}",
+                self.styles['BodyText']
+            ))
+        
         story.append(Spacer(1, 24))
         
         # Add all sections
@@ -427,7 +491,7 @@ class MullionDesignReport:
         return self.buffer
 
 
-def create_pdf_report(design_data: Dict[str, Any]) -> io.BytesIO:
+def create_pdf_report(design_data: Dict[str, Any], project_name: Optional[str] = None) -> io.BytesIO:
     """
     Create a PDF report from design data.
     
@@ -435,20 +499,23 @@ def create_pdf_report(design_data: Dict[str, Any]) -> io.BytesIO:
     ----------
     design_data : Dict[str, Any]
         Design data dictionary from create_design_json()
+    project_name : Optional[str]
+        Project name to display in header
     
     Returns
     -------
     io.BytesIO
         Buffer containing the PDF report
     """
-    report = MullionDesignReport(design_data)
+    report = MullionDesignReport(design_data, project_name)
     return report.generate()
 
 
 def add_pdf_download_button(
     design_data: Dict[str, Any],
     filename: str = "mullion_design_report.pdf",
-    button_label: str = "📄 Download PDF Report"
+    button_label: str = "📄 Download PDF Report",
+    project_name: Optional[str] = None
 ):
     """
     Add a download button to the Streamlit sidebar for the PDF report.
@@ -461,8 +528,10 @@ def add_pdf_download_button(
         The filename for the downloaded PDF file
     button_label : str
         The label for the download button
+    project_name : Optional[str]
+        Project name to include in header
     """
-    pdf_buffer = create_pdf_report(design_data)
+    pdf_buffer = create_pdf_report(design_data, project_name)
     
     st.sidebar.download_button(
         label=button_label,
