@@ -446,10 +446,10 @@ st.sidebar.header("Export Options")
 
 # Project name input
 project_name = st.sidebar.text_input(
-    "Project Name (Optional)",
+    "Project Name",
     value="",
     help="Enter a project name to include in the PDF report header",
-    placeholder="e.g., City Tower Facade"
+    placeholder="e.g., My New Project"
 )
 
 # Download button - only show if data exists
