@@ -1,5 +1,4 @@
 import io
-import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 import streamlit as st
@@ -17,27 +16,33 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 
+# Import the StateManager
+from state_manager import StateManager
 
-class MullionDesignReport:
-    """Generate a professional PDF report for mullion design calculations."""
+
+class WindLoadReport:
+    """Generate a professional PDF report for wind load calculations."""
     
-    def __init__(self, design_data: Dict[str, Any], project_name: Optional[str] = None):
+    def __init__(self, project_name: Optional[str] = None):
         """
         Initialize the report generator.
         
         Parameters
         ----------
-        design_data : Dict[str, Any]
-            Design data dictionary from create_design_json()
         project_name : Optional[str]
             Project name to display in header
         """
-        self.data = design_data
-        self.project_name = project_name
+        # Get data from StateManager
+        self.manager = StateManager()
+        self.inputs = self.manager.get_pdf_inputs()
+        self.results = self.manager.get_pdf_results()
+        
+        # Use project name from parameter or from inputs
+        self.project_name = project_name or self.inputs.get("project_name", "Wind Load Project")
+        
         self.buffer = io.BytesIO()
         self.page_width = A4[0]
         self.page_height = A4[1]
-        # Define margins to match document
         self.left_margin = 30
         self.right_margin = 30
         self.content_width = self.page_width - self.left_margin - self.right_margin
@@ -47,21 +52,16 @@ class MullionDesignReport:
     
     def _register_fonts(self):
         """Register custom Raleway fonts."""
-        font_dir = "fonts"  # Directory where your font files are stored
+        font_dir = "fonts"
         
-        # Define font paths - register the weights we'll use
         fonts_to_register = [
             ('Raleway-Regular', 'Raleway-Regular.ttf'),
             ('Raleway-Medium', 'Raleway-Medium.ttf'),
             ('Raleway-SemiBold', 'Raleway-SemiBold.ttf'),
             ('Raleway-Bold', 'Raleway-Bold.ttf'),
             ('Raleway-Italic', 'Raleway-Italic.ttf'),
-            ('Raleway-MediumItalic', 'Raleway-MediumItalic.ttf'),
-            ('Raleway-SemiBoldItalic', 'Raleway-SemiBoldItalic.ttf'),
-            ('Raleway-BoldItalic', 'Raleway-BoldItalic.ttf'),
         ]
         
-        # Register each font if the file exists
         for font_name, font_file in fonts_to_register:
             font_path = os.path.join(font_dir, font_file)
             if os.path.exists(font_path):
@@ -69,19 +69,13 @@ class MullionDesignReport:
                     pdfmetrics.registerFont(TTFont(font_name, font_path))
                 except Exception as e:
                     print(f"Warning: Could not register font {font_name}: {e}")
-            else:
-                print(f"Warning: Font file not found: {font_path}")
         
-        # Set font variables with fallback to Helvetica if Raleway not available
         self.font_regular = 'Raleway-Regular' if os.path.exists(os.path.join(font_dir, 'Raleway-Regular.ttf')) else 'Helvetica'
-        self.font_medium = 'Raleway-Medium' if os.path.exists(os.path.join(font_dir, 'Raleway-Medium.ttf')) else 'Helvetica-Bold'
         self.font_semibold = 'Raleway-SemiBold' if os.path.exists(os.path.join(font_dir, 'Raleway-SemiBold.ttf')) else 'Helvetica-Bold'
         self.font_bold = 'Raleway-Bold' if os.path.exists(os.path.join(font_dir, 'Raleway-Bold.ttf')) else 'Helvetica-Bold'
-        self.font_italic = 'Raleway-Italic' if os.path.exists(os.path.join(font_dir, 'Raleway-Italic.ttf')) else 'Helvetica-Oblique'
         
     def _setup_custom_styles(self):
         """Create custom paragraph styles for the report."""
-        # Only add styles if they don't already exist
         if 'CustomTitle' not in self.styles:
             self.styles.add(ParagraphStyle(
                 name='CustomTitle',
@@ -90,7 +84,7 @@ class MullionDesignReport:
                 textColor=colors.black,
                 spaceAfter=12,
                 alignment=TA_CENTER,
-                fontName=self.font_bold  # Use Bold for main title
+                fontName=self.font_bold
             ))
         
         if 'SectionHeading' not in self.styles:
@@ -101,11 +95,7 @@ class MullionDesignReport:
                 textColor=colors.HexColor('#db451d'),
                 spaceAfter=8,
                 spaceBefore=12,
-                fontName=self.font_bold,  # Use Bold for section headings
-                borderWidth=0,
-                borderColor=colors.HexColor('#1f4788'),
-                borderPadding=2,
-                borderRadius=0,
+                fontName=self.font_bold,
             ))
         
         if 'SubsectionHeading' not in self.styles:
@@ -116,7 +106,7 @@ class MullionDesignReport:
                 textColor=colors.HexColor('#db451d'),
                 spaceAfter=6,
                 spaceBefore=8,
-                fontName=self.font_semibold  # Use SemiBold for subsection headings
+                fontName=self.font_semibold
             ))
         
         if 'CustomBodyText' not in self.styles:
@@ -125,17 +115,7 @@ class MullionDesignReport:
                 parent=self.styles['Normal'],
                 fontSize=10,
                 spaceAfter=6,
-                fontName=self.font_regular  # Use Regular for body text
-            ))
-        
-        if 'FooterText' not in self.styles:
-            self.styles.add(ParagraphStyle(
-                name='FooterText',
-                parent=self.styles['Normal'],
-                fontSize=8,
-                textColor=colors.grey,
-                alignment=TA_CENTER,
-                fontName=self.font_regular  # Use Regular for footer
+                fontName=self.font_regular
             ))
     
     def _header_footer(self, canvas, doc):
@@ -148,18 +128,12 @@ class MullionDesignReport:
         canvas.line(self.left_margin, self.page_height - 40, 
                    self.page_width - self.right_margin, self.page_height - 40)
         
-        canvas.setFont(self.font_semibold, 8)  # Use SemiBold for header
+        canvas.setFont(self.font_semibold, 8)
         canvas.setFillColor(colors.grey)
-        
-        # Header text with optional project name
-        if self.project_name:
-            header_text = f"{self.project_name}: Mullion Design Calculation Report"
-        else:
-            header_text = "Mullion Design Calculation Report"
+        header_text = f"{self.project_name}: Wind Load Calculation Report"
         canvas.drawString(self.left_margin, self.page_height - 32, header_text)
         
         canvas.setFont(self.font_regular, 8)
-        canvas.setFillColor(colors.grey)
         date_str = datetime.now().strftime("%B %d, %Y")
         canvas.drawRightString(self.page_width - self.right_margin, self.page_height - 32, date_str)
         
@@ -171,33 +145,28 @@ class MullionDesignReport:
         canvas.setFont(self.font_regular, 8)
         canvas.setFillColor(colors.grey)
         
-        # Try to add logo - prefer PNG/JPG over SVG
+        # Try to add logo
+        logo_paths = ["images/TT_Logo_Colour.png", "TT_Logo_Colour.png"]
         logo_added = False
-        
-        # Try PNG first (most compatible)
-        for logo_path in ["images/TT_Logo_Colour.png"]:
+        for logo_path in logo_paths:
             if os.path.exists(logo_path):
                 try:
                     from reportlab.platypus import Image as RLImage
-                    # Add logo with appropriate sizing
-                    logo_height = 3  # mm - as requested
+                    logo_height = 3  # mm
                     logo = RLImage(logo_path, height=logo_height*mm)
-                    # Maintain aspect ratio
                     logo.drawHeight = logo_height * mm
                     logo.drawWidth = logo.imageWidth * (logo_height * mm / logo.imageHeight)
                     logo.drawOn(canvas, self.left_margin, 20)
                     logo_added = True
                     break
                 except Exception as e:
-                    print(f"Warning: Could not add logo from {logo_path}: {e}")
+                    print(f"Warning: Could not add logo: {e}")
         
-        # Fallback to text if no logo found
         if not logo_added:
             canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
         
         canvas.drawCentredString(self.page_width / 2, 30, f"Page {doc.page}")
-        canvas.drawRightString(self.page_width - self.right_margin, 30, 
-                              f"Version {self.data['metadata']['version']}")
+        canvas.drawRightString(self.page_width - self.right_margin, 30, "v1.0")
         
         canvas.restoreState()
     
@@ -228,250 +197,152 @@ class MullionDesignReport:
         table.setStyle(TableStyle(default_style))
         return table
     
-    def _add_geometry_section(self, story):
-        """Add geometry section to the report."""
-        story.append(Paragraph("1. Geometry", self.styles['SectionHeading']))
+    def _add_project_info_section(self, story):
+        """Add project information section."""
+        story.append(Paragraph("1. Project Information", self.styles['SectionHeading']))
         
-        geom = self.data['geometry']
         data = [
-            ['Parameter', 'Value', 'Units'],
-            ['Span', f"{geom['span_mm']:.0f}", 'mm'],
-            ['Bay Width', f"{geom['bay_width_mm']:.0f}", 'mm'],
-            ['Tributary Area', f"{geom['tributary_area_m2']:.3f}", 'm²']
+            ['Parameter', 'Value'],
+            ['Project Name', self.inputs.get('project_name', 'N/A')],
+            ['Project Number', self.inputs.get('project_number', 'N/A')],
+            ['Location', self.inputs.get('location', 'N/A')],
+            ['Region', self.inputs.get('region', 'N/A')],
         ]
         
-        # Use content width for table
-        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        col_widths = [self.content_width * 0.4, self.content_width * 0.6]
         table = self._create_table(data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
-    def _add_material_section(self, story):
-        """Add material properties section to the report."""
-        story.append(Paragraph("2. Material Properties", self.styles['SectionHeading']))
+    def _add_building_geometry_section(self, story):
+        """Add building geometry section."""
+        story.append(Paragraph("2. Building Geometry", self.styles['SectionHeading']))
         
-        mat = self.data['material']
         data = [
-            ['Property', 'Value', 'Units'],
-            ['Material Type', mat['type'], ''],
-            ['Grade', mat['grade'], ''],
-            ['Elastic Modulus (E)', f"{mat['elastic_modulus_GPa']:.1f}", 'GPa'],
-            ['Yield Strength (fy)', f"{mat['yield_strength_MPa']:.1f}", 'MPa'],
-            ['Density', f"{mat['density_kg_m3']:.0f}", 'kg/m³']
+            ['Parameter', 'Value', 'Units'],
+            ['North-South Dimension', f"{self.inputs.get('NS_dimension', 0.0):.2f}", 'm'],
+            ['East-West Dimension', f"{self.inputs.get('EW_dimension', 0.0):.2f}", 'm'],
+            ['Building Height (z)', f"{self.inputs.get('z', 0.0):.2f}", 'm'],
         ]
         
-        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
+        col_widths = [self.content_width * 0.5, self.content_width * 0.3, self.content_width * 0.2]
         table = self._create_table(data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
     
-    def _add_loading_section(self, story):
-        """Add loading conditions section to the report."""
-        story.append(Paragraph("3. Loading Conditions", self.styles['SectionHeading']))
-        
-        loading = self.data['loading']
-        
-        story.append(Paragraph("3.1 Wind Loading", self.styles['SubsectionHeading']))
-        wind_data = [
-            ['Parameter', 'Value', 'Units'],
-            ['Include Wind Load', 'Yes' if loading['include_wind'] else 'No', ''],
-        ]
-        if loading['include_wind']:
-            wind_data.extend([
-                ['Wind Pressure', f"{loading['wind_pressure_kPa']:.2f}", 'kPa'],
-            ])
-        
-        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
-        table = self._create_table(wind_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 8))
-        
-        story.append(Paragraph("3.2 Barrier Loading", self.styles['SubsectionHeading']))
-        barrier_data = [
-            ['Parameter', 'Value', 'Units'],
-            ['Include Barrier Load', 'Yes' if loading['include_barrier'] else 'No', ''],
-        ]
-        if loading['include_barrier']:
-            barrier_data.extend([
-                ['Barrier Load', f"{loading['barrier_load_kN_m']:.2f}", 'kN/m'],
-                ['Barrier Height', f"{loading['barrier_height_mm']:.0f}", 'mm']
-            ])
-        
-        table = self._create_table(barrier_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 12))
-    
-    def _add_load_cases_section(self, story):
-        """Add load cases section to the report."""
-        story.append(Paragraph("4. Load Cases", self.styles['SectionHeading']))
-        
-        cases = self.data['load_cases']
-        
-        story.append(Paragraph("4.1 Ultimate Limit State (ULS)", self.styles['SubsectionHeading']))
-        uls_data = [['Case Name', 'Wind Factor', 'Barrier Factor']]
-        for case in cases['uls_cases']:
-            uls_data.append([
-                case['name'],
-                f"{case['wind_factor']:.2f}",
-                f"{case['barrier_factor']:.2f}"
-            ])
-        
-        col_widths = [self.content_width * 0.4, self.content_width * 0.3, self.content_width * 0.3]
-        table = self._create_table(uls_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 8))
-        
-        story.append(Paragraph("4.2 Serviceability Limit State (SLS)", self.styles['SubsectionHeading']))
-        sls_data = [['Case Name', 'Wind Factor', 'Barrier Factor']]
-        for case in cases['sls_cases']:
-            sls_data.append([
-                case['name'],
-                f"{case['wind_factor']:.2f}",
-                f"{case['barrier_factor']:.2f}"
-            ])
-        
-        table = self._create_table(sls_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 12))
-    
-    def _add_design_criteria_section(self, story):
-        """Add design criteria section to the report."""
-        story.append(Paragraph("5. Design Criteria", self.styles['SectionHeading']))
-        
-        criteria = self.data['design_criteria']
-        
-        story.append(Paragraph("5.1 Deflection Criteria", self.styles['SubsectionHeading']))
-        defl = criteria['deflection']
-        defl_data = [
-            ['Parameter', 'Value', 'Units'],
-            ['Criteria Type', defl['criteria_type'], ''],
-            ['Deflection Limit', f"{defl['limit_mm']:.2f}", 'mm'],
-            ['Limit Ratio', f"span / {defl['limit_ratio']:.0f}", '']
-        ]
-        
-        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
-        table = self._create_table(defl_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 8))
-        
-        story.append(Paragraph("5.2 Material Safety", self.styles['SubsectionHeading']))
-        safety = criteria['material_safety']
-        safety_data = [
-            ['Parameter', 'Value', 'Units'],
-            ['Safety Factor (γM)', f"{safety['safety_factor']:.2f}", ''],
-            ['Allowable Stress', f"{safety['allowable_stress_MPa']:.2f}", 'MPa'],
-            ['', f"{safety['allowable_stress_Pa']:.2e}", 'Pa']
-        ]
-        
-        table = self._create_table(safety_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 12))
-    
-    def _add_uls_results_section(self, story):
-        """Add ULS results section to the report."""
-        story.append(Paragraph("6. Ultimate Limit State (ULS) Results", self.styles['SectionHeading']))
-        
-        uls = self.data['uls_results']
-        
-        story.append(Paragraph("6.1 Governing Values", self.styles['SubsectionHeading']))
-        gov_data = [
-            ['Parameter', 'Governing Case', 'Value', 'Units'],
-            ['Maximum Moment', 
-             uls['governing_moment']['case'],
-             f"{uls['governing_moment']['value_kNm']:.2f}", 'kNm'],
-            ['Maximum Shear',
-             uls['governing_shear']['case'],
-             f"{uls['governing_shear']['value_kN']:.2f}", 'kN']
-        ]
-        
-        col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
-                     self.content_width * 0.2, self.content_width * 0.2]
-        table = self._create_table(gov_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 8))
-        
-        story.append(Paragraph("6.2 All Load Cases", self.styles['SubsectionHeading']))
-        cases_data = [['Case', 'RA (kN)', 'RB (kN)', 'M_max (kNm)', 'V_max (kN)']]
-        
-        for case_name, case_data in uls['reactions'].items():
-            cases_data.append([
-                case_name,
-                f"{case_data['RA_kN']:.2f}",
-                f"{case_data['RB_kN']:.2f}",
-                f"{case_data['M_max_kNm']:.2f}",
-                f"{case_data['V_max_kN']:.2f}"
-            ])
-        
-        col_widths = [self.content_width * 0.25, self.content_width * 0.175, 
-                     self.content_width * 0.175, self.content_width * 0.2, self.content_width * 0.2]
-        table = self._create_table(cases_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 12))
-    
-    def _add_sls_results_section(self, story):
-        """Add SLS results section to the report."""
-        story.append(Paragraph("7. Serviceability Limit State (SLS) Results", self.styles['SectionHeading']))
-        
-        sls = self.data['sls_results']
-        
-        story.append(Paragraph("7.1 Governing Values", self.styles['SubsectionHeading']))
-        # Use superscript notation that renders correctly
-        gov_data = [
-            ['Parameter', 'Value', 'Units'],
-            ['Deflection Limit', f"{sls['deflection_limit_mm']:.2f}", 'mm'],
-            ['Governing Case', sls['governing_case'], ''],
-            ['Required I', f"{sls['required_I_cm4']:.2f}", 'cm⁴'],
-        ]
-        
-        col_widths = [self.content_width * 0.6, self.content_width * 0.25, self.content_width * 0.15]
-        table = self._create_table(gov_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 8))
-        
-        story.append(Paragraph("7.2 All Load Cases", self.styles['SubsectionHeading']))
-        cases_data = [['Case', 'Required I (cm⁴)', 'Unit Deflection (mm)']]
-        
-        for case_name, case_data in sls['cases'].items():
-            cases_data.append([
-                case_name,
-                f"{case_data['I_req_cm4']:.2f}",
-                f"{case_data['unit_deflection_mm']:.3f}"
-            ])
-        
-        col_widths = [self.content_width * 0.4, self.content_width * 0.3, self.content_width * 0.3]
-        table = self._create_table(cases_data, col_widths=col_widths)
-        story.append(table)
-        story.append(Spacer(1, 12))
-    
-    def _add_design_requirements_section(self, story):
-        """Add design requirements summary section."""
-        story.append(Paragraph("8. Design Requirements Summary", self.styles['SectionHeading']))
-        
-        req = self.data['design_requirements']
+    def _add_site_parameters_section(self, story):
+        """Add site parameters section."""
+        story.append(Paragraph("3. Site Parameters", self.styles['SectionHeading']))
         
         data = [
-            ['Requirement', 'Governing Case', 'Required Value', 'Units'],
-            ['Section Modulus (Z)',
-             req['section_modulus']['governing_case'],
-             f"{req['section_modulus']['required_cm3']:.2f}", 'cm³'],
-            ['Moment of Inertia (I)',
-             req['moment_of_inertia']['governing_case'],
-             f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm⁴'],
+            ['Parameter', 'Value', 'Units'],
+            ['Altitude', f"{self.inputs.get('altitude', 0.0):.0f}", 'm'],
+            ['Altitude Factor (c_alt)', f"{self.inputs.get('c_alt', 0.0):.3f}", '-'],
+            ['Distance to Sea', f"{self.inputs.get('d_sea', 0.0):.0f}", 'km'],
+            ['Terrain Category', self.inputs.get('terrain_category', 'N/A'), '-'],
+            ['Air Density', f"{self.inputs.get('rho_air', 0.0):.2f}", 'kg/m³'],
         ]
         
-        col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
-                     self.content_width * 0.225, self.content_width * 0.175]
+        col_widths = [self.content_width * 0.5, self.content_width * 0.3, self.content_width * 0.2]
         table = self._create_table(data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
+    
+    def _add_wind_parameters_section(self, story):
+        """Add wind parameters section."""
+        story.append(Paragraph("4. Wind Parameters", self.styles['SectionHeading']))
         
-        # Add recommendation text
-        story.append(Paragraph(
-            "<b>Section Selection:</b> Select a mullion section with properties equal to or "
-            "exceeding the required values above. Ensure that both the section modulus (Z) "
-            "and moment of inertia (I) requirements are satisfied.",
-            self.styles['CustomBodyText']
-        ))
+        data = [
+            ['Parameter', 'Value', 'Units'],
+            ['Basic Wind Speed (map)', f"{self.inputs.get('V_bmap', 0.0):.2f}", 'm/s'],
+            ['Basic Wind Speed (adjusted)', f"{self.inputs.get('V_b', 0.0):.2f}", 'm/s'],
+            ['Basic Wind Pressure (q_b)', f"{self.results.get('q_b', 0.0):.3f}", 'kPa'],
+        ]
+        
+        col_widths = [self.content_width * 0.5, self.content_width * 0.3, self.content_width * 0.2]
+        table = self._create_table(data, col_widths=col_widths)
+        story.append(table)
+        story.append(Spacer(1, 12))
+    
+    def _add_calculated_results_section(self, story):
+        """Add calculated results section."""
+        story.append(Paragraph("5. Calculated Results", self.styles['SectionHeading']))
+        
+        # Helper function to safely format values
+        def format_factor(key):
+            value = self.results.get(key, 0.0)
+            if value == 0.0:
+                return 'N/A'
+            return f"{value:.3f}"
+        
+        # Displacement height
+        story.append(Paragraph("5.1 Displacement Height", self.styles['SubsectionHeading']))
+        disp_data = [
+            ['Parameter', 'Value', 'Units'],
+            ['h_dis', f"{self.results.get('h_dis', 0.0):.2f}", 'm'],
+            ['z - h_dis', f"{self.results.get('z_minus_h_dis', 0.0):.2f}", 'm'],
+        ]
+        
+        col_widths = [self.content_width * 0.5, self.content_width * 0.3, self.content_width * 0.2]
+        table = self._create_table(disp_data, col_widths=col_widths)
+        story.append(table)
+        story.append(Spacer(1, 8))
+        
+        # Check if this is UK region for UK-specific factors
+        region = self.inputs.get('region', '')
+        if region == 'United Kingdom':
+            story.append(Paragraph("5.2 Peak Velocity Pressure Factors (UK NA)", self.styles['SubsectionHeading']))
+            
+            uk_data = [
+                ['Factor', 'Value', 'Description'],
+                ['c_ez', format_factor('c_ez'), 'Exposure factor at height z'],
+                ['c_eT', format_factor('c_eT'), 'Turbulence factor'],
+                ['I_vz', format_factor('I_vz'), 'Turbulence intensity at height z'],
+                ['k_iT', format_factor('k_iT'), 'Terrain factor'],
+            ]
+            
+            col_widths_uk = [self.content_width * 0.2, self.content_width * 0.2, self.content_width * 0.6]
+            table_uk = self._create_table(uk_data, col_widths=col_widths_uk)
+            story.append(table_uk)
+            story.append(Spacer(1, 8))
+            
+            # Check if mean wind velocity was calculated (z > 50m with orography)
+            v_mean = self.results.get('v_mean', 0.0)
+            if v_mean > 0.0:
+                story.append(Paragraph("5.3 Mean Wind Velocity Factors (UK NA)", self.styles['SubsectionHeading']))
+                
+                uk_mean_data = [
+                    ['Factor', 'Value', 'Description'],
+                    ['c_rz', format_factor('c_rz'), 'Roughness factor at height z'],
+                    ['c_rT', format_factor('c_rT'), 'Terrain factor for roughness'],
+                    ['c_o', format_factor('c_o'), 'Orography factor'],
+                ]
+                
+                table_uk_mean = self._create_table(uk_mean_data, col_widths=col_widths_uk)
+                story.append(table_uk_mean)
+                story.append(Spacer(1, 8))
+                
+                # Mean wind velocity result
+                story.append(Paragraph("5.4 Mean Wind Velocity", self.styles['SubsectionHeading']))
+                v_mean_data = [
+                    ['Parameter', 'Value', 'Units'],
+                    ['v_m(z)', f"{v_mean:.2f}", 'm/s'],
+                ]
+                table_v_mean = self._create_table(v_mean_data, col_widths=col_widths)
+                story.append(table_v_mean)
+                story.append(Spacer(1, 8))
+        
+        # Peak velocity pressure (for all regions)
+        section_num = "5.5" if region == "United Kingdom" and v_mean > 0.0 else "5.3"
+        story.append(Paragraph(f"{section_num} Peak Velocity Pressure", self.styles['SubsectionHeading']))
+        qp_data = [
+            ['Parameter', 'Value', 'Units'],
+            ['q_p(z)', f"{self.results.get('qp_value', 0.0):.3f}", 'kPa'],
+        ]
+        
+        table_qp = self._create_table(qp_data, col_widths=col_widths)
+        story.append(table_qp)
+        story.append(Spacer(1, 12))
     
     def generate(self):
         """Generate the complete PDF report."""
@@ -488,37 +359,26 @@ class MullionDesignReport:
         
         # Title page
         story.append(Spacer(1, 40))
-        story.append(Paragraph("Mullion Design Calculation Report", self.styles['CustomTitle']))
+        story.append(Paragraph("Wind Load Calculation Report", self.styles['CustomTitle']))
         story.append(Spacer(1, 12))
         
         # Report info
-        report_date = datetime.fromisoformat(self.data['metadata']['report_generated'])
         story.append(Paragraph(
-            f"<b>Report Generated:</b> {report_date.strftime('%B %d, %Y at %H:%M')}",
+            f"<b>Report Generated:</b> {datetime.now().strftime('%B %d, %Y at %H:%M')}",
             self.styles['CustomBodyText']
         ))
         story.append(Paragraph(
-            f"<b>Application:</b> {self.data['metadata']['app_name']} v{self.data['metadata']['version']}",
+            f"<b>Project:</b> {self.project_name}",
             self.styles['CustomBodyText']
         ))
-        
-        if self.project_name:
-            story.append(Paragraph(
-                f"<b>Project:</b> {self.project_name}",
-                self.styles['CustomBodyText']
-            ))
-        
         story.append(Spacer(1, 24))
         
         # Add all sections
-        self._add_geometry_section(story)
-        self._add_material_section(story)
-        self._add_loading_section(story)
-        self._add_load_cases_section(story)
-        self._add_design_criteria_section(story)
-        self._add_uls_results_section(story)
-        self._add_sls_results_section(story)
-        self._add_design_requirements_section(story)
+        self._add_project_info_section(story)
+        self._add_building_geometry_section(story)
+        self._add_site_parameters_section(story)
+        self._add_wind_parameters_section(story)
+        self._add_calculated_results_section(story)
         
         # Build PDF
         doc.build(story, onFirstPage=self._header_footer, onLaterPages=self._header_footer)
@@ -527,14 +387,12 @@ class MullionDesignReport:
         return self.buffer
 
 
-def create_pdf_report(design_data: Dict[str, Any], project_name: Optional[str] = None) -> io.BytesIO:
+def create_pdf_report(project_name: Optional[str] = None) -> io.BytesIO:
     """
-    Create a PDF report from design data.
+    Create a PDF report from current session state.
     
     Parameters
     ----------
-    design_data : Dict[str, Any]
-        Design data dictionary from create_design_json()
     project_name : Optional[str]
         Project name to display in header
     
@@ -543,36 +401,50 @@ def create_pdf_report(design_data: Dict[str, Any], project_name: Optional[str] =
     io.BytesIO
         Buffer containing the PDF report
     """
-    report = MullionDesignReport(design_data, project_name)
+    report = WindLoadReport(project_name)
     return report.generate()
 
 
 def add_pdf_download_button(
-    design_data: Dict[str, Any],
-    filename: str = "mullion_design_report.pdf",
+    filename: Optional[str] = None,
     button_label: str = "📄 Download PDF Report",
     project_name: Optional[str] = None
 ):
     """
     Add a download button to the Streamlit sidebar for the PDF report.
+    Uses StateManager to automatically get data from session state.
     
     Parameters
     ----------
-    design_data : Dict[str, Any]
-        The design data dictionary to export
-    filename : str
-        The filename for the downloaded PDF file
+    filename : Optional[str]
+        The filename for the downloaded PDF file. Auto-generated if None.
     button_label : str
         The label for the download button
     project_name : Optional[str]
         Project name to include in header
     """
-    pdf_buffer = create_pdf_report(design_data, project_name)
+    # Check if required data exists
+    if not hasattr(st.session_state, 'inputs') or not st.session_state.inputs:
+        st.sidebar.warning("⚠️ No data available. Complete calculations first.")
+        return
     
-    st.sidebar.download_button(
-        label=button_label,
-        data=pdf_buffer,
-        file_name=filename,
-        mime="application/pdf",
-        help="Download complete design calculation report as PDF"
-    )
+    # Generate filename if not provided
+    if filename is None:
+        proj_name = project_name or st.session_state.inputs.get("project_name", "Wind_Load")
+        safe_name = "".join(c if c.isalnum() or c in (' ', '_', '-') else '_' for c in proj_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        filename = f"{safe_name}_Report_{timestamp}.pdf"
+    
+    try:
+        pdf_buffer = create_pdf_report(project_name)
+        
+        st.sidebar.download_button(
+            label=button_label,
+            data=pdf_buffer,
+            file_name=filename,
+            mime="application/pdf",
+            help="Download complete wind load calculation report as PDF",
+            use_container_width=True
+        )
+    except Exception as e:
+        st.sidebar.error(f"❌ PDF generation failed: {str(e)}")
