@@ -171,30 +171,28 @@ class MullionDesignReport:
         canvas.setFont(self.font_regular, 8)
         canvas.setFillColor(colors.grey)
         
-        # Try to add logo, fallback to text if logo not found
-        logo_path = "images/TT_Logo_Colour.svg"
-        if os.path.exists(logo_path):
-            try:
-                # For SVG, you might need to convert to PNG/JPG or use a different approach
-                # ReportLab has limited SVG support, so this might not work perfectly
-                # If SVG doesn't work, consider using PNG/JPG version of logo
-                from svglib.svglib import svg2rlg
-                from reportlab.graphics import renderPDF
-                
-                logo = svg2rlg(logo_path)
-                if logo:
-                    # Scale logo to appropriate size (adjust as needed)
-                    scale = 0.15  # Adjust this value to resize logo
-                    logo.width *= scale
-                    logo.height *= scale
-                    logo.scale(scale, scale)
-                    renderPDF.draw(logo, canvas, self.left_margin, 22)
-                else:
-                    canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
-            except:
-                # Fallback to text if SVG rendering fails
-                canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
-        else:
+        # Try to add logo - prefer PNG/JPG over SVG
+        logo_added = False
+        
+        # Try PNG first (most compatible)
+        for logo_path in ["images/TT_Logo_Colour.png"]:
+            if os.path.exists(logo_path):
+                try:
+                    from reportlab.platypus import Image as RLImage
+                    # Add logo with appropriate sizing
+                    logo_height = 3  # mm - as requested
+                    logo = RLImage(logo_path, height=logo_height*mm)
+                    # Maintain aspect ratio
+                    logo.drawHeight = logo_height * mm
+                    logo.drawWidth = logo.imageWidth * (logo_height * mm / logo.imageHeight)
+                    logo.drawOn(canvas, self.left_margin, 20)
+                    logo_added = True
+                    break
+                except Exception as e:
+                    print(f"Warning: Could not add logo from {logo_path}: {e}")
+        
+        # Fallback to text if no logo found
+        if not logo_added:
             canvas.drawString(self.left_margin, 30, "Thornton Tomasetti")
         
         canvas.drawCentredString(self.page_width / 2, 30, f"Page {doc.page}")
