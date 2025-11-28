@@ -460,25 +460,32 @@ class MullionDesignReport:
         col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
                      self.content_width * 0.225, self.content_width * 0.175]
         
-        # Custom styling matching pressure summary table with TT colors
-        # TT_DarkBlue = rgb(0,48,60) = #00303C
-        # TT_LightLightBlue = rgb(207,241,242) = #CFF1F2
+        # Custom styling with both rows light blue
         design_requirements_style = [
+            # Header styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00303C')),  # TT Dark Blue header
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text in header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            
+            # Both data rows light blue
+            ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor('#CFF1F2')),  # Both rows: Light Blue
+            
+            # Alignment and fonts
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), self.font_bold),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('FONTNAME', (0, 1), (-1, -1), self.font_regular),
             ('FONTSIZE', (0, 1), (-1, -1), 9),
+            
+            # Padding
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
             ('TOPPADDING', (0, 0), (-1, 0), 8),
             ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
             ('TOPPADDING', (0, 1), (-1, -1), 6),
-            ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#00303C')),  # TT Dark Blue
-            ('LINEBELOW', (0, 0), (-1, 0), 0.7, colors.HexColor('#00303C')),  # TT Dark Blue
-            ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#00303C')),  # TT Dark Blue
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#CFF1F2')])  # Alternate with TT Light Light Blue
+            
+            # Lines
+            ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#00303C')),
+            ('LINEBELOW', (0, 0), (-1, 0), 0.7, colors.HexColor('#00303C')),
+            ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#00303C')),
         ]
         
         table = Table(data, colWidths=col_widths)
