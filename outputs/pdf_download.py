@@ -437,7 +437,7 @@ class MullionDesignReport:
                 f"{case_data['I_req_cm4']:.2f}",
             ])
         
-        col_widths = [self.content_width * 0.4, self.content_width * 0.3, self.content_width * 0.3]
+        col_widths = [self.content_width * 0.6, self.content_width * 0.4]
         table = self._create_table(cases_data, col_widths=col_widths)
         story.append(table)
         story.append(Spacer(1, 12))
