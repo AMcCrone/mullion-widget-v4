@@ -717,7 +717,10 @@ def section_selection_ui(
     parent.markdown("---")
     parent.markdown("#### Summary")
     
-    n_pass = len(df_display[df_display['ULS Util.'].str.rstrip('%').astype(float) <= 100])
+    uls_util = df_display['ULS Util.'].str.rstrip('%').astype(float)
+    sls_util = df_display['SLS Util.'].str.rstrip('%').astype(float)
+    
+    n_pass = len(df_display[(uls_util <= 100) & (sls_util <= 100)])
     n_fail = len(df_display) - n_pass
     
     sum_col1, sum_col2, sum_col3 = parent.columns([1,1,2])
