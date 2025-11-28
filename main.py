@@ -198,7 +198,6 @@ with st.spinner("⏳ Analyzing load cases..."):
 st.subheader("Ultimate Limit State (ULS)")
 
 # Governing values summary
-st.markdown("#### Governing Values")
 col1, col2, col3 = st.columns(3)
 
 gov_M_case, gov_M_val = uls_results['governing']['M_max']
@@ -229,7 +228,7 @@ with col3:
     )
 
 # Reactions table
-st.markdown("#### Reactions for All ULS Cases")
+st.markdown("#### Summary of All ULS Cases")
 reaction_data = []
 for case_name, case_data in uls_results['cases'].items():
     reaction_data.append({
@@ -342,8 +341,6 @@ st.markdown("---")
 # ========================================
 st.subheader("Serviceability Limit State (SLS)")
 
-st.markdown("#### Deflection Requirements")
-
 # Summary of SLS results
 col1, col2, col3 = st.columns(3)
 
@@ -402,6 +399,8 @@ with st.container():
         st.markdown("### Stiffness (SLS)")
         st.metric("Minimum I required", f"{I_req*1e8:.2f} cm⁴")
         st.caption(f"Based on {gov_sls_case}")
+
+st.markdown("---")
 
 st.header("Section Selection")
 
