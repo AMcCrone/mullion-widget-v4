@@ -732,7 +732,7 @@ def section_selection_ui(
     with sum_col2:
         parent.metric("Sections Failing", f"{n_fail}",
                      delta=f"-{n_fail/len(df_display)*100:.1f}%" if len(df_display) > 0 else "0%",
-                     delta_color="inverse")
+                     delta_color="normal")
     
     with sum_col3:
         if recommended:
