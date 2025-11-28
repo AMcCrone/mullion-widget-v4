@@ -163,8 +163,6 @@ def create_design_json(
                 case_name: {
                     "I_req_m4": case_data['I_req_m4'],
                     "I_req_cm4": case_data['I_req_m4'] * 1e8,
-                    "unit_deflection_m": case_data['v_unit_max_m'],
-                    "unit_deflection_mm": case_data['v_unit_max_m'] * 1000
                 }
                 for case_name, case_data in sls_results['cases'].items()
             }
