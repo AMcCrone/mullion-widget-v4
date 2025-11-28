@@ -450,7 +450,6 @@ def analyze_sls_deflection_requirement(
         # Store case results
         results['cases'][case.name] = {
             'I_req_m4': I_req,
-            'v_unit_max_m': v_unit_max
         }
         
         # Track governing (maximum required I)
