@@ -461,34 +461,29 @@ class MullionDesignReport:
         col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
                      self.content_width * 0.225, self.content_width * 0.175]
         
-        table = Table(data, colWidths=col_widths)
-        table.setStyle(TableStyle([
-            # Header styling - TT Dark Blue background with white text
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00303C')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 9),
+        # Custom styling matching pressure summary table with TT colors
+        # TT_DarkBlue = rgb(0,48,60) = #00303C
+        # TT_LightLightBlue = rgb(207,241,242) = #CFF1F2
+        design_requirements_style = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00303C')),  # TT Dark Blue header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text in header
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), self.font_bold),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTNAME', (0, 1), (-1, -1), self.font_regular),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
             ('TOPPADDING', (0, 0), (-1, 0), 8),
-            
-            # Data rows styling
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('TOPPADDING', (0, 1), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-            
-            # Alternating row colors - White and TT Light Light Blue
-            ('BACKGROUND', (0, 1), (-1, 1), colors.white),
-            ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#CFF1F2')),
-            
-            # Grid lines - TT Dark Blue
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#00303C')),
-            
-            # Alignment
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#00303C')),  # TT Dark Blue
+            ('LINEBELOW', (0, 0), (-1, 0), 0.7, colors.HexColor('#00303C')),  # TT Dark Blue
+            ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#00303C')),  # TT Dark Blue
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#CFF1F2')])  # Alternate with TT Light Light Blue
+        ]
         
+        table = Table(data, colWidths=col_widths)
+        table.setStyle(TableStyle(design_requirements_style))
         story.append(table)
         story.append(Spacer(1, 12))
         
