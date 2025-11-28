@@ -723,7 +723,7 @@ def section_selection_ui(
     n_pass = len(df_display[(uls_util <= 100) & (sls_util <= 100)])
     n_fail = len(df_display) - n_pass
     
-    sum_col1, sum_col2, sum_col3 = parent.columns([1,1,2])
+    sum_col1, sum_col2, sum_col3 = parent.columns([1,1,3])
     
     with sum_col1:
         parent.metric("Sections Passing", f"{n_pass}", 
