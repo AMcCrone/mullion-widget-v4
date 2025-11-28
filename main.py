@@ -378,7 +378,6 @@ for case_name, case_data in sls_results['cases'].items():
     sls_data.append({
         "Load Case": case_name,
         "Required I (cm⁴)": f"{case_data['I_req_m4']*1e8:.2f}",
-        "Unit Deflection (mm)": f"{case_data['v_unit_max_m']*1000:.3f}",
         "Governing": is_governing
     })
 
