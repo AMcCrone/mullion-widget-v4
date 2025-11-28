@@ -429,13 +429,12 @@ class MullionDesignReport:
         story.append(Spacer(1, 8))
 
         story.append(Paragraph("7.2 All Load Cases", self.styles['SubsectionHeading']))
-        cases_data = [['Case', 'Required I (cm⁴)', 'Unit Deflection (mm)']]
+        cases_data = [['Case', 'Required I (cm⁴)']]
         
         for case_name, case_data in sls['cases'].items():
             cases_data.append([
                 case_name,
                 f"{case_data['I_req_cm4']:.2f}",
-                f"{case_data['unit_deflection_mm']:.3f}"
             ])
         
         col_widths = [self.content_width * 0.4, self.content_width * 0.3, self.content_width * 0.3]
