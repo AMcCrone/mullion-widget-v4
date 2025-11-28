@@ -361,7 +361,6 @@ class MullionDesignReport:
             ['Parameter', 'Value', 'Units'],
             ['Safety Factor (γM)', f"{safety['safety_factor']:.2f}", ''],
             ['Allowable Stress', f"{safety['allowable_stress_MPa']:.2f}", 'MPa'],
-            ['', f"{safety['allowable_stress_Pa']:.2e}", 'Pa']
         ]
 
         table = self._create_table(safety_data, col_widths=col_widths)
@@ -459,10 +458,37 @@ class MullionDesignReport:
              req['moment_of_inertia']['governing_case'],
              f"{req['moment_of_inertia']['required_cm4']:.2f}", 'cm⁴'],
         ]
-
         col_widths = [self.content_width * 0.3, self.content_width * 0.3, 
                      self.content_width * 0.225, self.content_width * 0.175]
-        table = self._create_table(data, col_widths=col_widths)
+        
+        table = Table(data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            # Header styling - TT Dark Blue background with white text
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00303C')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            
+            # Data rows styling
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            
+            # Alternating row colors - White and TT Light Light Blue
+            ('BACKGROUND', (0, 1), (-1, 1), colors.white),
+            ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#CFF1F2')),
+            
+            # Grid lines - TT Dark Blue
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#00303C')),
+            
+            # Alignment
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
         story.append(table)
         story.append(Spacer(1, 12))
         
