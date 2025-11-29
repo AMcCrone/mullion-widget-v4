@@ -222,7 +222,8 @@ def generate_uls_plot(
         yaxis=dict(range=[0, y_max]),
         height=650,
         hovermode='closest',
-        plot_bgcolor='white'
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     
     return fig
@@ -343,7 +344,8 @@ def generate_sls_plot(
         yaxis=dict(range=[0, y_max]),
         height=650,
         hovermode='closest',
-        plot_bgcolor='white'
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     
     return fig
@@ -469,7 +471,8 @@ def generate_utilisation_plot(
             zaxis=dict(range=[50, 1.05 * max_depth], title="Section Depth (mm)"),
             camera=camera
         ),
-        plot_bgcolor='white'
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     
     return fig, recommended_text
