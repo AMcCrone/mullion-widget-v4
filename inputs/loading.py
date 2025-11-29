@@ -640,8 +640,8 @@ def loading_diagram_ui(container=None, key_prefix: str = "load",
         showlegend=False,
         margin=dict(l=0, r=0, t=30, b=0),
         height=600,
-        paper_bgcolor='white',
-        plot_bgcolor='white'
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     
     parent.plotly_chart(fig, width="stretch")
@@ -976,8 +976,8 @@ def beam_model_diagram_ui(container=None, key_prefix: str = "load",
         showlegend=False,
         margin=dict(l=20, r=20, t=40, b=20),
         height=400,
-        paper_bgcolor='white',
-        plot_bgcolor='white'
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     
     parent.plotly_chart(fig, width="stretch")
