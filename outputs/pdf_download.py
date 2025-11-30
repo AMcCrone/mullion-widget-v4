@@ -486,6 +486,8 @@ class MullionDesignReport:
             ('LINEABOVE', (0, 0), (-1, 0), 1.0, colors.HexColor('#00303C')),
             ('LINEBELOW', (0, 0), (-1, 0), 0.7, colors.HexColor('#00303C')),
             ('LINEBELOW', (0, -1), (-1, -1), 1.0, colors.HexColor('#00303C')),
+            # Apply bold font to 2nd last column (Net pressure column) data rows only
+            ('FONTNAME', (-2, 1), (-2, -1), self.font_bold),
         ]
         
         table = Table(data, colWidths=col_widths)
