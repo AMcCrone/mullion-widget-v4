@@ -577,31 +577,48 @@ def create_pdf_report(design_data: Dict[str, Any], project_name: Optional[str] =
 
 def add_pdf_download_button(
     design_data: Dict[str, Any],
-    filename: str = "mullion_design_report.pdf",
+    filename: Optional[str] = None,
     button_label: str = "📄 Download PDF Report",
     project_name: Optional[str] = None
 ):
     """
     Add a download button to the Streamlit sidebar for the PDF report.
-
     
     Parameters
     ----------
     design_data : Dict[str, Any]
         The design data dictionary to export
-    filename : str
-        The filename for the downloaded PDF file
+    filename : Optional[str]
+        The filename for the downloaded PDF file. Auto-generated if None.
     button_label : str
         The label for the download button
     project_name : Optional[str]
-        Project name to include in header
+        Project name to include in header and filename
     """
-    pdf_buffer = create_pdf_report(design_data, project_name)
-
-    st.sidebar.download_button(
-        label=button_label,
-        data=pdf_buffer,
-        file_name=filename,
-        mime="application/pdf",
-        help="Download complete design calculation report as PDF"
-    )
+    # Generate filename if not provided
+    if filename is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        
+        if project_name and project_name.strip():
+            # Sanitize project name for filename
+            safe_name = "".join(c if c.isalnum() or c in (' ', '_', '-') else '_' for c in project_name)
+            filename = f"{safe_name}_Mullion_Report_{timestamp}.pdf"
+        else:
+            filename = f"Mullion_Report_{timestamp}.pdf"
+    
+    try:
+        pdf_buffer = create_pdf_report(design_data, project_name)
+        
+        st.sidebar.download_button(
+            label=button_label,
+            data=pdf_buffer,
+            file_name=filename,
+            mime="application/pdf",
+            help="Download complete design calculation report as PDF",
+            width="stretch",
+        )
+    except Exception as e:
+        st.sidebar.error(f"❌ PDF generation failed: {str(e)}")
+        # Show detailed error in expander for debugging
+        with st.sidebar.expander("🔍 Error details"):
+            st.exception(e)
